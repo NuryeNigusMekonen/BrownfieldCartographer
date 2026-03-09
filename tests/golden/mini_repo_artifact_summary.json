@@ -1,0 +1,134 @@
+{
+  "module_nodes": [
+    {
+      "id": "dag.py",
+      "language": "python",
+      "imports": [],
+      "public_functions": [],
+      "classes": [],
+      "high_velocity": false
+    },
+    {
+      "id": "helpers.py",
+      "language": "python",
+      "imports": [],
+      "public_functions": [
+        "transform_orders"
+      ],
+      "classes": [],
+      "high_velocity": false
+    },
+    {
+      "id": "model.sql",
+      "language": "sql",
+      "imports": [],
+      "public_functions": [],
+      "classes": [],
+      "high_velocity": false
+    },
+    {
+      "id": "pipeline.py",
+      "language": "python",
+      "imports": [
+        "helpers",
+        "pandas"
+      ],
+      "public_functions": [
+        "build_orders"
+      ],
+      "classes": [
+        "PipelineJob(BaseJob)"
+      ],
+      "high_velocity": false
+    },
+    {
+      "id": "schema.yml",
+      "language": "yaml",
+      "imports": [],
+      "public_functions": [
+        "depends_on",
+        "downstream",
+        "id",
+        "models",
+        "name",
+        "nodes",
+        "tasks"
+      ],
+      "classes": [],
+      "high_velocity": false
+    }
+  ],
+  "lineage_edges": [
+    {
+      "source": "config::extract",
+      "target": "config::transform",
+      "edge_type": "CONFIGURES",
+      "analysis_method": "yaml",
+      "source_file": "schema.yml"
+    },
+    {
+      "source": "config::orders_raw",
+      "target": "config::model",
+      "edge_type": "CONFIGURES",
+      "analysis_method": "yaml",
+      "source_file": "schema.yml"
+    },
+    {
+      "source": "pipeline::extract_task",
+      "target": "pipeline::transform_task",
+      "edge_type": "CONFIGURES",
+      "analysis_method": "python_ast",
+      "source_file": "dag.py"
+    },
+    {
+      "source": "transform::model.sql::HASH",
+      "target": "dataset::model",
+      "edge_type": "PRODUCES",
+      "analysis_method": "sqlglot",
+      "source_file": "model.sql"
+    },
+    {
+      "source": "transform::model.sql::HASH",
+      "target": "dataset::orders_raw",
+      "edge_type": "CONSUMES",
+      "analysis_method": "sqlglot",
+      "source_file": "model.sql"
+    },
+    {
+      "source": "transform::pipeline.py",
+      "target": "dataset::data/orders.csv",
+      "edge_type": "CONSUMES",
+      "analysis_method": "tree_sitter_python",
+      "source_file": "pipeline.py"
+    }
+  ],
+  "codebase_sections": [
+    "## Architecture Overview",
+    "## Critical Path",
+    "## Data Sources",
+    "## Data Sinks",
+    "## Known Debt",
+    "## High-Velocity Files",
+    "## Module Purpose Index"
+  ],
+  "onboarding_sections": [
+    "## 1) Primary Data Ingestion Path",
+    "## 2) Critical Output Datasets/Endpoints",
+    "## 3) Blast Radius of Critical Module Failure",
+    "## 4) Business Logic Concentration",
+    "## 5) Change Velocity (Last 90-ish Days Proxy)"
+  ],
+  "semantic_index_paths": [
+    "dag.py",
+    "helpers.py",
+    "model.sql",
+    "pipeline.py",
+    "schema.yml"
+  ],
+  "trace_actions": [
+    "surveyor:module_graph_built",
+    "hydrologist:lineage_graph_built",
+    "semanticist:purpose_statements_generated",
+    "orchestrator:day_one_questions_answered"
+  ]
+}

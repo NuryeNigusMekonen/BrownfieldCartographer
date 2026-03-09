@@ -1,0 +1,138 @@
+{
+  "module_nodes": [
+    {
+      "id": "dbt_project.yml",
+      "language": "yaml",
+      "imports": [],
+      "public_functions": [
+        "analysis-paths",
+        "clean-targets",
+        "config-version",
+        "jaffle_shop",
+        "macro-paths",
+        "materialized",
+        "model-paths",
+        "models",
+        "name",
+        "profile",
+        "require-dbt-version",
+        "seed-paths",
+        "staging",
+        "target-path",
+        "test-paths",
+        "version"
+      ],
+      "classes": [],
+      "high_velocity": false
+    },
+    {
+      "id": "models/customers.sql",
+      "language": "sql",
+      "imports": [],
+      "public_functions": [],
+      "classes": [],
+      "high_velocity": false
+    },
+    {
+      "id": "models/orders.sql",
+      "language": "sql",
+      "imports": [],
+      "public_functions": [],
+      "classes": [],
+      "high_velocity": false
+    },
+    {
+      "id": "models/schema.yml",
+      "language": "yaml",
+      "imports": [],
+      "public_functions": [
+        "accepted_values",
+        "columns",
+        "description",
+        "field",
+        "models",
+        "name",
+        "relationships",
+        "tests",
+        "to",
+        "values",
+        "version"
+      ],
+      "classes": [],
+      "high_velocity": false
+    },
+    {
+      "id": "models/staging/schema.yml",
+      "language": "yaml",
+      "imports": [],
+      "public_functions": [
+        "accepted_values",
+        "columns",
+        "models",
+        "name",
+        "tests",
+        "values",
+        "version"
+      ],
+      "classes": [],
+      "high_velocity": false
+    },
+    {
+      "id": "models/staging/stg_customers.sql",
+      "language": "sql",
+      "imports": [],
+      "public_functions": [],
+      "classes": [],
+      "high_velocity": false
+    },
+    {
+      "id": "models/staging/stg_orders.sql",
+      "language": "sql",
+      "imports": [],
+      "public_functions": [],
+      "classes": [],
+      "high_velocity": false
+    },
+    {
+      "id": "models/staging/stg_payments.sql",
+      "language": "sql",
+      "imports": [],
+      "public_functions": [],
+      "classes": [],
+      "high_velocity": false
+    }
+  ],
+  "lineage_edges": [],
+  "codebase_sections": [
+    "## Architecture Overview",
+    "## Critical Path",
+    "## Data Sources",
+    "## Data Sinks",
+    "## Known Debt",
+    "## High-Velocity Files",
+    "## Module Purpose Index"
+  ],
+  "onboarding_sections": [
+    "## 1) Primary Data Ingestion Path",
+    "## 2) Critical Output Datasets/Endpoints",
+    "## 3) Blast Radius of Critical Module Failure",
+    "## 4) Business Logic Concentration",
+    "## 5) Change Velocity (Last 90-ish Days Proxy)"
+  ],
+  "semantic_index_paths": [
+    "dbt_project.yml",
+    "models/customers.sql",
+    "models/orders.sql",
+    "models/schema.yml",
+    "models/staging/schema.yml",
+    "models/staging/stg_customers.sql",
+    "models/staging/stg_orders.sql",
+    "models/staging/stg_payments.sql"
+  ],
+  "trace_actions": [
+    "surveyor:module_graph_built",
+    "hydrologist:lineage_graph_built",
+    "semanticist:purpose_statements_generated",
+    "orchestrator:day_one_questions_answered"
+  ]
+}

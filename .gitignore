@@ -1,0 +1,9 @@
+test_repos/
+.venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+.pytest_cache/
+.cartography/
