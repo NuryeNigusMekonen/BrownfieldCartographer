@@ -1,0 +1,10 @@
+models:
+  - name: model
+    depends_on:
+      nodes:
+        - orders_raw
+
+tasks:
+  - id: extract
+    downstream:
+      - transform
