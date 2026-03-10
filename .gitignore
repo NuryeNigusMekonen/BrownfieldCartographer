@@ -9,3 +9,6 @@ __pycache__/
 .cartography/
 =0.3.2
 lib/
+frontend/node_modules/
+frontend/dist/
+.cartography_workspace/
