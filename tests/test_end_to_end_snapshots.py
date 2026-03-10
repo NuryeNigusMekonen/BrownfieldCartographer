@@ -13,6 +13,15 @@ def test_jaffle_shop_artifact_snapshot(jaffle_repo_copy: Path, deterministic_sem
     assert observed == expected
 
 
+def test_jaffle_shop_hyphen_artifact_snapshot(
+    jaffle_shop_hyphen_repo_copy: Path, deterministic_semantics: None
+) -> None:
+    out_dir = run_analysis(jaffle_shop_hyphen_repo_copy)
+    observed = normalized_artifact_summary(out_dir)
+    expected = json.loads((GOLDEN / "jaffle-shop_artifact_summary.json").read_text(encoding="utf-8"))
+    assert observed == expected
+
+
 def test_mini_repo_artifact_snapshot(mini_repo_copy: Path, deterministic_semantics: None) -> None:
     out_dir = run_analysis(mini_repo_copy)
     observed = normalized_artifact_summary(out_dir)

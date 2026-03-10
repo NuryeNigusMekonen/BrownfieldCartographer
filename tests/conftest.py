@@ -24,6 +24,14 @@ def jaffle_repo_copy(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
+def jaffle_shop_hyphen_repo_copy(tmp_path: Path) -> Path:
+    src = ROOT / "test_repos" / "jaffle-shop"
+    dst = tmp_path / "jaffle-shop"
+    shutil.copytree(src, dst, ignore=shutil.ignore_patterns(".cartography", ".git"))
+    return dst
+
+
+@pytest.fixture
 def mini_repo_copy(tmp_path: Path) -> Path:
     src = FIXTURES / "mini_repo"
     dst = tmp_path / "mini_repo"
