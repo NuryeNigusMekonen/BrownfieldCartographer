@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+from collections import deque
 from pathlib import Path
+from typing import Any
 
 from src.analyzers.dag_config_parser import DAGConfigAnalyzer
 from src.analyzers.python_dataflow import PythonDataFlowAnalyzer
@@ -12,10 +14,11 @@ from src.models.schemas import EdgeType, TraceEvent
 
 
 class HydrologistAgent:
-    def __init__(self) -> None:
+    def __init__(self, lineage_graph: KnowledgeGraph | None = None) -> None:
         self.sql = SQLLineageAnalyzer()
         self.cfg = DAGConfigAnalyzer()
         self.pyflow = PythonDataFlowAnalyzer()
+        self.lineage_graph: KnowledgeGraph | None = lineage_graph
 
     def run(
         self,
@@ -168,7 +171,85 @@ class HydrologistAgent:
                 confidence="medium",
             )
         )
+        self.lineage_graph = graph
         return graph, trace
+
+    def attach_graph(self, lineage_graph: KnowledgeGraph) -> None:
+        self.lineage_graph = lineage_graph
+
+    def get_upstream(self, dataset_name: str) -> list[dict[str, Any]]:
+        graph = self._require_graph()
+        target = self._resolve_dataset_node(graph, dataset_name)
+        if not target:
+            return []
+        return self._traverse_dependencies(graph, target, direction="upstream")
+
+    def get_downstream(self, dataset_name: str) -> list[dict[str, Any]]:
+        graph = self._require_graph()
+        target = self._resolve_dataset_node(graph, dataset_name)
+        if not target:
+            return []
+        return self._traverse_dependencies(graph, target, direction="downstream")
+
+    def what_feeds_table(self, dataset_name: str) -> dict[str, Any]:
+        graph = self._require_graph()
+        target = self._resolve_dataset_node(graph, dataset_name) or self._normalize_dataset_name(dataset_name)
+        direct = self._direct_neighbors(graph, target, direction="upstream") if target in graph.graph else []
+        full = self.get_upstream(dataset_name) if target in graph.graph else []
+        return {
+            "target": target,
+            "direct_upstream": direct,
+            "full_upstream": full,
+            "evidence": self._collect_evidence(full),
+        }
+
+    def what_depends_on_output(self, dataset_name: str) -> dict[str, Any]:
+        graph = self._require_graph()
+        target = self._resolve_dataset_node(graph, dataset_name) or self._normalize_dataset_name(dataset_name)
+        direct = self._direct_neighbors(graph, target, direction="downstream") if target in graph.graph else []
+        full = self.get_downstream(dataset_name) if target in graph.graph else []
+        return {
+            "target": target,
+            "direct_downstream": direct,
+            "full_downstream": full,
+            "evidence": self._collect_evidence(full),
+        }
+
+    def blast_radius(
+        self,
+        dataset_name_or_graph: str | KnowledgeGraph,
+        graph_or_node: str | KnowledgeGraph | None = None,
+    ) -> dict[str, Any] | list[str]:
+        # Backward compatibility:
+        # - blast_radius(graph, node_id) -> list[str]
+        # New behavior:
+        # - blast_radius(dataset_name) -> structured dict
+        if isinstance(dataset_name_or_graph, KnowledgeGraph):
+            graph_obj = dataset_name_or_graph
+            node_id = str(graph_or_node or "")
+            if not node_id:
+                return []
+            if isinstance(graph_obj, DataLineageGraph):
+                return graph_obj.blast_radius(node_id)
+            return graph_obj.downstream(node_id)
+
+        if isinstance(graph_or_node, KnowledgeGraph):
+            node_id = str(dataset_name_or_graph)
+            graph_obj = graph_or_node
+            if isinstance(graph_obj, DataLineageGraph):
+                return graph_obj.blast_radius(node_id)
+            return graph_obj.downstream(node_id)
+
+        dataset_name = str(dataset_name_or_graph)
+        graph_obj = self._require_graph()
+        target = self._resolve_dataset_node(graph_obj, dataset_name) or self._normalize_dataset_name(dataset_name)
+        impacted = self.get_downstream(dataset_name) if target in graph_obj.graph else []
+        return {
+            "target": target,
+            "impacted_nodes": impacted,
+            "impact_count": len(impacted),
+            "evidence": self._collect_evidence(impacted),
+        }
 
     def _extract_notebook_io(self, file_path: Path, repo_path: Path, graph: DataLineageGraph) -> None:
         rel = str(file_path.relative_to(repo_path))
@@ -224,11 +305,6 @@ class HydrologistAgent:
                     unresolved_dynamic_reference=True,
                 )
 
-    def blast_radius(self, graph: KnowledgeGraph, node_id: str) -> list[str]:
-        if isinstance(graph, DataLineageGraph):
-            return graph.blast_radius(node_id)
-        return graph.downstream(node_id)
-
     def find_sources(self, graph: KnowledgeGraph) -> list[str]:
         if isinstance(graph, DataLineageGraph):
             return graph.find_sources()
@@ -262,3 +338,162 @@ class HydrologistAgent:
         contextual = f"{dataset} @ {source_file}:{start}-{end}"
         node_id = f"dataset::{dataset}::{source_file}:{start}-{end}"
         return node_id, contextual
+
+    def _require_graph(self) -> KnowledgeGraph:
+        if self.lineage_graph is None:
+            raise ValueError("Hydrologist lineage graph is not attached.")
+        return self.lineage_graph
+
+    def _normalize_dataset_name(self, dataset_name: str) -> str:
+        text = dataset_name.strip()
+        if not text:
+            return "dataset::"
+        if text.startswith("dataset::"):
+            return text
+        return f"dataset::{text}"
+
+    def _resolve_dataset_node(self, graph: KnowledgeGraph, dataset_name: str) -> str | None:
+        normalized = self._normalize_dataset_name(dataset_name)
+        if normalized in graph.graph:
+            return normalized
+
+        search = dataset_name.strip().lower()
+        if not search:
+            return None
+        normalized_lower = normalized.lower()
+
+        exact_prefix_matches: list[str] = []
+        loose_matches: list[str] = []
+        for node_id, attrs in graph.graph.nodes(data=True):
+            if attrs.get("node_type") != "dataset":
+                continue
+            node_lower = str(node_id).lower()
+            name_lower = str(attrs.get("name", "")).lower()
+            if node_lower == normalized_lower or name_lower == search:
+                return str(node_id)
+            if node_lower.startswith(f"{normalized_lower}::"):
+                exact_prefix_matches.append(str(node_id))
+                continue
+            if search in node_lower or search in name_lower:
+                loose_matches.append(str(node_id))
+
+        if exact_prefix_matches:
+            return sorted(exact_prefix_matches)[0]
+        if loose_matches:
+            return sorted(loose_matches)[0]
+        return None
+
+    def _traverse_dependencies(
+        self,
+        graph: KnowledgeGraph,
+        start_node: str,
+        direction: str,
+    ) -> list[dict[str, Any]]:
+        if start_node not in graph.graph:
+            return []
+
+        visited: set[str] = {start_node}
+        queue: deque[tuple[str, int]] = deque([(start_node, 0)])
+        results: list[dict[str, Any]] = []
+
+        while queue:
+            current, depth = queue.popleft()
+            neighbors = (
+                list(graph.graph.predecessors(current))
+                if direction == "upstream"
+                else list(graph.graph.successors(current))
+            )
+            for neighbor in sorted(neighbors):
+                if neighbor in visited:
+                    continue
+                visited.add(neighbor)
+                next_depth = depth + 1
+                entry = self._node_entry_with_evidence(
+                    graph=graph,
+                    origin=current,
+                    neighbor=neighbor,
+                    direction=direction,
+                    depth=next_depth,
+                )
+                results.append(entry)
+                queue.append((neighbor, next_depth))
+
+        results.sort(key=lambda item: (int(item.get("depth", 0)), str(item.get("node", ""))))
+        return results
+
+    def _direct_neighbors(self, graph: KnowledgeGraph, start_node: str, direction: str) -> list[dict[str, Any]]:
+        if start_node not in graph.graph:
+            return []
+        neighbors = (
+            sorted(graph.graph.predecessors(start_node))
+            if direction == "upstream"
+            else sorted(graph.graph.successors(start_node))
+        )
+        return [
+            self._node_entry_with_evidence(
+                graph=graph,
+                origin=start_node,
+                neighbor=neighbor,
+                direction=direction,
+                depth=1,
+            )
+            for neighbor in neighbors
+        ]
+
+    def _node_entry_with_evidence(
+        self,
+        graph: KnowledgeGraph,
+        origin: str,
+        neighbor: str,
+        direction: str,
+        depth: int,
+    ) -> dict[str, Any]:
+        node_attrs = dict(graph.graph.nodes.get(neighbor, {}))
+        if direction == "upstream":
+            edge_attrs = dict(graph.graph.get_edge_data(neighbor, origin, default={}))
+        else:
+            edge_attrs = dict(graph.graph.get_edge_data(origin, neighbor, default={}))
+
+        line_range = edge_attrs.get("line_range") or node_attrs.get("line_range") or [0, 0]
+        if isinstance(line_range, tuple):
+            line_range = list(line_range)
+
+        return {
+            "node": neighbor,
+            "node_type": str(node_attrs.get("node_type", "unknown")),
+            "source_file": str(edge_attrs.get("source_file") or node_attrs.get("source_file") or ""),
+            "line_range": line_range,
+            "analysis_method": str(edge_attrs.get("analysis_method") or node_attrs.get("analysis_method") or ""),
+            "depth": depth,
+            "transformation_type": str(node_attrs.get("transformation_type", "")),
+        }
+
+    def _collect_evidence(self, entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        seen: set[tuple[str, str, str, tuple[int, int], str]] = set()
+        evidence: list[dict[str, Any]] = []
+        for item in entries:
+            line = item.get("line_range") or [0, 0]
+            if isinstance(line, tuple):
+                line = list(line)
+            if not isinstance(line, list) or len(line) != 2:
+                line = [0, 0]
+            key = (
+                str(item.get("node", "")),
+                str(item.get("source_file", "")),
+                str(item.get("analysis_method", "")),
+                (int(line[0]), int(line[1])),
+                str(item.get("transformation_type", "")),
+            )
+            if key in seen:
+                continue
+            seen.add(key)
+            evidence.append(
+                {
+                    "node": key[0],
+                    "source_file": key[1],
+                    "analysis_method": key[2],
+                    "line_range": [key[3][0], key[3][1]],
+                    "transformation_type": key[4],
+                }
+            )
+        return evidence
