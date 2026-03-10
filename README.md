@@ -1,6 +1,6 @@
 # Brownfield Cartographer
 
-Engineering codebase intelligence for rapid brownfield FDE onboarding.
+Engineering codebase intelligence for rapid brownfield FDE onboarding. 
 
 ## Features
 

@@ -64,8 +64,8 @@ class HydrologistAgent:
                     dsrc = f"dataset::{src}"
                     graph.add_node(dsrc, "dataset", name=src, storage_type="table")
                     graph.add_edge(
-                        t_id,
                         dsrc,
+                        t_id,
                         EdgeType.CONSUMES,
                         source_file=dep.source_file,
                         line_range=dep.line_range,
@@ -113,18 +113,40 @@ class HydrologistAgent:
                     transformation_type="python",
                 )
             for event in py_events:
-                d_id = f"dataset::{event.dataset}"
-                graph.add_node(d_id, "dataset", name=event.dataset, storage_type=event.storage_type)
-                edge_type = EdgeType.CONSUMES if event.flow_type == "CONSUMES" else EdgeType.PRODUCES
-                graph.add_edge(
-                    transform_id,
-                    d_id,
-                    edge_type,
+                d_id, dataset_name = self._dataset_node_id(
+                    event.dataset,
                     source_file=event.source_file,
                     line_range=event.line_range,
-                    analysis_method=event.analysis_method,
+                    unresolved=event.unresolved,
+                )
+                graph.add_node(
+                    d_id,
+                    "dataset",
+                    name=dataset_name,
+                    storage_type=event.storage_type,
                     unresolved_dynamic_reference=event.unresolved,
                 )
+                edge_type = EdgeType.CONSUMES if event.flow_type == "CONSUMES" else EdgeType.PRODUCES
+                if edge_type == EdgeType.CONSUMES:
+                    graph.add_edge(
+                        d_id,
+                        transform_id,
+                        edge_type,
+                        source_file=event.source_file,
+                        line_range=event.line_range,
+                        analysis_method=event.analysis_method,
+                        unresolved_dynamic_reference=event.unresolved,
+                    )
+                else:
+                    graph.add_edge(
+                        transform_id,
+                        d_id,
+                        edge_type,
+                        source_file=event.source_file,
+                        line_range=event.line_range,
+                        analysis_method=event.analysis_method,
+                        unresolved_dynamic_reference=event.unresolved,
+                    )
                 if event.unresolved:
                     unresolved_dynamic_refs += 1
         for file in ipynb_files:
@@ -167,19 +189,40 @@ class HydrologistAgent:
             if idx < 0:
                 continue
             line = text[:idx].count("\n") + 1
-            dataset = PythonDataFlowAnalyzer.DYNAMIC_REFERENCE
-            edge_type = EdgeType.CONSUMES if token.startswith("read_") else EdgeType.PRODUCES
-            ds = f"dataset::{dataset}"
-            graph.add_node(ds, "dataset", name=dataset, storage_type="file")
-            graph.add_edge(
-                transform_id,
-                ds,
-                edge_type,
+            dataset_id, dataset_name = self._dataset_node_id(
+                PythonDataFlowAnalyzer.DYNAMIC_REFERENCE,
                 source_file=rel,
                 line_range=(line, line),
-                analysis_method="notebook_text_scan",
+                unresolved=True,
+            )
+            edge_type = EdgeType.CONSUMES if token.startswith("read_") else EdgeType.PRODUCES
+            graph.add_node(
+                dataset_id,
+                "dataset",
+                name=dataset_name,
+                storage_type="file",
                 unresolved_dynamic_reference=True,
             )
+            if edge_type == EdgeType.CONSUMES:
+                graph.add_edge(
+                    dataset_id,
+                    transform_id,
+                    edge_type,
+                    source_file=rel,
+                    line_range=(line, line),
+                    analysis_method="notebook_text_scan",
+                    unresolved_dynamic_reference=True,
+                )
+            else:
+                graph.add_edge(
+                    transform_id,
+                    dataset_id,
+                    edge_type,
+                    source_file=rel,
+                    line_range=(line, line),
+                    analysis_method="notebook_text_scan",
+                    unresolved_dynamic_reference=True,
+                )
 
     def blast_radius(self, graph: KnowledgeGraph, node_id: str) -> list[str]:
         if isinstance(graph, DataLineageGraph):
@@ -204,3 +247,18 @@ class HydrologistAgent:
     def _ignored(self, path: Path) -> bool:
         ignored = {".git", "__pycache__", ".venv", "venv", "node_modules", ".cartography", "dist", "build"}
         return any(part in ignored for part in path.parts)
+
+    def _dataset_node_id(
+        self,
+        dataset: str,
+        *,
+        source_file: str,
+        line_range: tuple[int, int],
+        unresolved: bool,
+    ) -> tuple[str, str]:
+        if not unresolved:
+            return f"dataset::{dataset}", dataset
+        start, end = line_range
+        contextual = f"{dataset} @ {source_file}:{start}-{end}"
+        node_id = f"dataset::{dataset}::{source_file}:{start}-{end}"
+        return node_id, contextual

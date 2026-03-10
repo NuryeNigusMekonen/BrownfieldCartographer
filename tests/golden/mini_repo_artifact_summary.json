@@ -74,6 +74,20 @@
       "source_file": "schema.yml"
     },
     {
+      "source": "dataset::data/orders.csv",
+      "target": "transform::pipeline.py",
+      "edge_type": "CONSUMES",
+      "analysis_method": "tree_sitter_python",
+      "source_file": "pipeline.py"
+    },
+    {
+      "source": "dataset::orders_raw",
+      "target": "transform::model.sql::HASH",
+      "edge_type": "CONSUMES",
+      "analysis_method": "sqlglot",
+      "source_file": "model.sql"
+    },
+    {
       "source": "pipeline::extract_task",
       "target": "pipeline::transform_task",
       "edge_type": "CONFIGURES",
@@ -86,20 +100,6 @@
       "edge_type": "PRODUCES",
       "analysis_method": "sqlglot",
       "source_file": "model.sql"
-    },
-    {
-      "source": "transform::model.sql::HASH",
-      "target": "dataset::orders_raw",
-      "edge_type": "CONSUMES",
-      "analysis_method": "sqlglot",
-      "source_file": "model.sql"
-    },
-    {
-      "source": "transform::pipeline.py",
-      "target": "dataset::data/orders.csv",
-      "edge_type": "CONSUMES",
-      "analysis_method": "tree_sitter_python",
-      "source_file": "pipeline.py"
     }
   ],
   "codebase_sections": [
