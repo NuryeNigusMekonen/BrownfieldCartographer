@@ -7,3 +7,5 @@ __pycache__/
 *.db
 .pytest_cache/
 .cartography/
+=0.3.2
+lib/

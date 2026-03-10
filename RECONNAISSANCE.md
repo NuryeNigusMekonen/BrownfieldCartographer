@@ -2,67 +2,89 @@
 
 ## Phase 0 Target Selection
 
-- Primary target: `test_repos/jaffle_shop` (dbt Labs open-source demo/legacy project).
-- Reason selected: explicit recommended candidate in assignment prompt; local git clone available for manual recon.
-- Constraint encountered: attempted to switch to Apache Airflow for stricter brownfield scale, but network clone in this environment produced empty repos only.
-- File count observed in local target directory: 54 files total on disk (including `.git` internals), 19 tracked project files.
-- Languages/artifact types observed: SQL, YAML, Markdown, CSV, PNG, text.
+- Primary target: `test_repos/https-github.com-meltano-meltano.git-38a4d2db` (Meltano OSS codebase).
+- Why this target: larger and more realistic brownfield surface than `jaffle_shop`, with mixed orchestration/state/plugin concerns.
+- Repository size observed:
+  - tracked files: 1033 (`git ls-files | wc -l`)
+  - files on disk: 1070 (`find ... -type f | wc -l`)
+- Dominant artifact types (top): Python (316), YAML/YML (71), JS (82), Markdown (74), plus lock/docs/assets.
+- Important constraint: clone was `--depth 1`, so commit-history/velocity analysis is low-confidence.
 
 ## Manual Recon Window
 
-- Approximate manual exploration duration: 30+ minutes.
-- Files inspected by hand: `README.md`, `dbt_project.yml`, all model SQL files, `models/schema.yml`, `models/staging/schema.yml`, docs markdown files, and recent git history.
+- Approximate manual exploration duration: 45+ minutes.
+- Files inspected by hand:
+  - `README.md`
+  - `src/meltano/cli/__init__.py`
+  - `src/meltano/cli/cli.py`
+  - `src/meltano/cli/run.py`
+  - `src/meltano/core/block/block_parser.py`
+  - `src/meltano/core/block/extract_load.py`
+  - `src/meltano/core/runner/singer.py`
+  - `src/meltano/core/state_service.py`
+  - `src/meltano/core/state_store/base.py`
+  - recent git log metadata
 
 ## Five FDE Day-One Questions (Manual Answers)
 
 1. What is the primary ingestion path?
-- Raw data enters via dbt seeds in `seeds/raw_customers.csv`, `seeds/raw_orders.csv`, and `seeds/raw_payments.csv`.
-- `dbt seed` materializes those CSVs; staging models (`models/staging/stg_*.sql`) ingest via `{{ ref('raw_*') }}`.
-- Mart models (`models/orders.sql`, `models/customers.sql`) ingest from staging via `{{ ref('stg_*') }}`.
+- In this codebase, ingestion is command-driven EL execution:
+  - CLI entrypoint registers `run` (`src/meltano/cli/__init__.py`).
+  - top-level CLI resolves project context/environment (`src/meltano/cli/cli.py`).
+  - `meltano run` parses blocks/jobs into executable block sets (`src/meltano/cli/run.py`, `src/meltano/core/block/block_parser.py`).
+  - `ExtractLoadBlocks` orchestrates extractor/loader execution and state behavior (`src/meltano/core/block/extract_load.py`).
+  - `SingerRunner` streams extractor output into loader stdin (`src/meltano/core/runner/singer.py`).
+- Practical interpretation: the ingestion boundary is plugin-based (Singer taps, loaders, and command blocks), not a fixed in-repo table list.
 
 2. What are the 3-5 most critical outputs?
-- Warehouse relation for `orders` model (`models/orders.sql`) with payment-method splits and total `amount`.
-- Warehouse relation for `customers` model (`models/customers.sql`) with first/most recent order and lifetime value.
-- Staging relations (`stg_customers`, `stg_orders`, `stg_payments`) that all downstream marts depend on.
-- Data quality test outcomes declared in `models/schema.yml` and `models/staging/schema.yml` (`unique`, `not_null`, `accepted_values`, `relationships`).
-- Generated project documentation context from `models/docs.md` + `models/overview.md` + schema metadata (`dbt docs generate` path).
+- `meltano run` execution outcomes (success/failure of pipeline block sets) via CLI run path (`src/meltano/cli/run.py`).
+- Persisted run state used for incremental processing and recovery (`src/meltano/core/state_service.py`).
+- State backend writes across configured stores (filesystem/system DB/cloud backends) via the state-store abstraction (`src/meltano/core/state_store/base.py` and backend modules).
+- Plugin installation side effects and runnable environments (venv/install path) from plugin install service (`src/meltano/core/plugin_install_service.py`).
+- Structured logs/telemetry and command lifecycle events (tracking/logging flows through CLI/core services).
 
 3. If one critical module fails, what is the blast radius?
-- If `models/staging/stg_orders.sql` fails or produces bad keys, both marts are impacted:
-- `models/orders.sql` breaks directly (depends on `stg_orders`).
-- `models/customers.sql` breaks/derives incorrect metrics (joins orders and payments through order keys).
-- Relationship and not-null tests for downstream models become invalid/noisy.
+- If `src/meltano/core/block/extract_load.py` fails, the blast radius is high:
+  - EL block execution fails for `meltano run`.
+  - Singer tap->target orchestration may not execute or terminate correctly.
+  - state updates/checkpoint behavior can become inconsistent.
+  - downstream user commands depending on successful runs (schedules/jobs/state ops) degrade.
+- If `src/meltano/core/state_service.py` or state backend manager fails:
+  - incremental/stateful run guarantees degrade.
+  - replay/recovery behavior is impacted across environments.
 
 4. Is business logic concentrated or distributed?
-- Mostly concentrated in two mart files:
-- `models/orders.sql`: payment method pivots + order-level amount rollups.
-- `models/customers.sql`: customer-level aggregations (first order, most recent order, number of orders, CLV).
-- Staging files are thin normalization/renaming layers, not heavy business-rule hubs.
+- Distributed with a few concentration hubs:
+  - CLI orchestration and command semantics in `src/meltano/cli/*`.
+  - block parsing/execution and runner orchestration in `src/meltano/core/block/*` + `src/meltano/core/runner/*`.
+  - plugin lifecycle in `src/meltano/core/plugin_*` and `src/meltano/core/plugin/*`.
+  - state and persistence strategy in `src/meltano/core/state_*`.
+- This is a platform-style codebase; logic is spread across services rather than concentrated in one or two transform files.
 
 5. What files change most often (90-day velocity map)?
-- 90-day git window: no commits found (`git log --since='90 days ago'` returned empty).
-- Most recent commit: `fd7bfac` on 2024-04-18 (`README` disclaimer update).
-- Historical hotspots (all-time commit touch count):
-- `models/customers.sql` (12)
-- `models/orders.sql` (8)
-- `dbt_project.yml` (5)
-- `README.md` (4)
+- Most recent commit in local clone: `a6821df` on `2026-03-09` (`chore: add stbiadmin as a contributor for code (#9897)`).
+- 90-day velocity output is currently not trustworthy for ranking hotspots because clone depth is 1, so many files appear with count `1`.
+- Confidence note: for production-grade velocity maps, fetch full history (or at least a deep enough window) before using churn as a risk signal.
 
 ## Manual Difficulty Analysis
 
 ## Hardest to infer manually
 
-- Determining operational criticality from a small codebase without runtime metadata (e.g., which model truly breaks business reporting first).
-- Separating “demo simplifications” from real architectural patterns (README explicitly says this project keeps anti-patterns for simplicity).
-- Estimating change velocity from a repository with no recent commits.
+- Distinguishing framework internals from user-facing operational critical paths in a large platform repository.
+- Mapping "data lineage" expectations to plugin-mediated runtime flows (rather than static SQL DAGs).
+- Isolating meaningful churn signals with shallow git history.
 
 ## Where I got lost
 
-- Initial ambiguity over whether to treat seed-driven ingestion as “real” ingestion vs warehouse source ingestion.
-- Ambiguity around “production system” requirement vs prompt-recommended `jaffle_shop` candidate.
+- Initial ambiguity between Meltano-the-platform code and example-library/integration project configs in the same repo.
+- Early analyzer outputs over-emphasized high-churn config files (`.grype.yaml`, CI YAML) over runtime core modules, requiring manual correction.
+- The generated lineage graph contained many dynamic unresolved references, so manual interpretation was necessary.
 
 ## Architecture priorities implied by this recon
 
-- Prioritize reliable lineage extraction from `ref()` graphs first; that gave the fastest path to blast-radius reasoning.
-- Always pair structural lineage with test metadata (schema tests are key risk signals in dbt projects).
-- Include velocity confidence labels (for example, “no recent activity”) so downstream automation does not overstate certainty.
+- Prioritize robust Python call/import graph quality for large multi-package repos before trusting "critical path" ranking.
+- Improve runtime-centric filtering (exclude CI/docs scaffolding by default for critical-path scoring).
+- Strengthen plugin/runtime lineage extraction:
+  - command -> block parser -> block executor -> runner -> state store
+  - include plugin type semantics (extractor/loader/mapper/utility) in lineage nodes.
+- Attach confidence metadata to velocity and lineage when history is shallow or dynamic references are unresolved.
