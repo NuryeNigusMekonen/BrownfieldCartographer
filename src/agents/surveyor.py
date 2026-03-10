@@ -75,8 +75,9 @@ class SurveyorAgent:
                     kg.add_edge(module.path, target_path, EdgeType.IMPORTS, weight=1.0)
 
         # Dead code candidate heuristic: public symbols but no inbound imports.
+        import_graph = kg.module_import_graph()
         for module in modules.values():
-            if module.public_functions and kg.graph.in_degree(module.path) == 0:
+            if module.public_functions and import_graph.in_degree(module.path) == 0:
                 module.is_dead_code_candidate = True
                 kg.graph.nodes[module.path]["is_dead_code_candidate"] = True
 
@@ -162,10 +163,12 @@ class SurveyorAgent:
         resolved_module = self._resolve_import_path(module_import, importer_path)
         if not resolved_module:
             return None
-        candidates = [resolved_module.replace(".", "/") + ".py", resolved_module.replace(".", "/") + "/__init__.py"]
-        for c in candidates:
-            if c in available_paths:
-                return c
+        dotted_candidates = self._dotted_import_candidates(resolved_module, available_paths)
+        for dotted in dotted_candidates:
+            path_stem = dotted.replace(".", "/")
+            for candidate in (f"{path_stem}.py", f"{path_stem}/__init__.py"):
+                if candidate in available_paths:
+                    return candidate
         return None
 
     def _resolve_import_path(self, module_import: str, importer_path: str) -> str:
@@ -186,3 +189,29 @@ class SurveyorAgent:
         if remainder:
             base_parts.extend([part for part in remainder.split(".") if part])
         return ".".join(base_parts)
+
+    def _dotted_import_candidates(self, resolved_module: str, available_paths: set[str]) -> list[str]:
+        candidates: list[str] = []
+        current = resolved_module
+        while current:
+            candidates.append(current)
+            if "." not in current:
+                break
+            current = current.rsplit(".", 1)[0]
+
+        # Support src-layout repositories where imports use package names but files live under src/.
+        if any(path.startswith("src/") for path in available_paths):
+            prefixed: list[str] = []
+            for candidate in candidates:
+                src_candidate = f"src.{candidate}"
+                if src_candidate not in candidates:
+                    prefixed.append(src_candidate)
+            candidates.extend(prefixed)
+
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for candidate in candidates:
+            if candidate and candidate not in seen:
+                seen.add(candidate)
+                ordered.append(candidate)
+        return ordered
