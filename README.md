@@ -142,9 +142,20 @@ export OLLAMA_HOST=http://127.0.0.1:11434
 export CARTOGRAPHER_MODEL_FAST=llama3.2:3b
 export CARTOGRAPHER_MODEL_SYNTH=llama3.1:8b
 export CARTOGRAPHER_EMBED_MODEL=nomic-embed-text
-```
+
 
 When Ollama is unavailable, semantic flows fall back to deterministic local heuristics.
+```
+#### to start the server + frontend 
+
+## backend
+cd /home/nurye/Desktop/TRP1/week4/BrownfieldCartographer
+. .venv/bin/activate
+uvicorn backend.main:app --host 127.0.0.1 --port 8765 --reload --log-level info
+
+## frontend 
+cd /home/nurye/Desktop/TRP1/week4/BrownfieldCartographer/frontend
+npm run dev -- --host 127.0.0.1 --port 5173
 
 ## Development Notes
 
