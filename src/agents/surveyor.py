@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 import subprocess
 import math
 from datetime import datetime, timedelta
@@ -7,7 +8,7 @@ from pathlib import Path
 
 from src.analyzers.tree_sitter_analyzer import TreeSitterAnalyzer
 from src.graph.knowledge_graph import KnowledgeGraph
-from src.models.schemas import EdgeType, FunctionNode, ModuleNode, TraceEvent
+from src.models.schemas import FunctionNode, ModuleNode, TraceEvent
 
 
 class SurveyorAgent:
@@ -15,71 +16,137 @@ class SurveyorAgent:
         self.analyzer = TreeSitterAnalyzer()
 
     def run(
-        self, repo_path: Path, include_files: set[str] | None = None
+        self,
+        repo_path: Path,
+        include_files: set[str] | None = None,
+        progress_callback: Callable[[str], None] | None = None,
     ) -> tuple[KnowledgeGraph, dict[str, ModuleNode], list[TraceEvent]]:
         kg = KnowledgeGraph()
         modules: dict[str, ModuleNode] = {}
         function_nodes: dict[str, FunctionNode] = {}
         trace: list[TraceEvent] = []
         velocity_30d = self.velocity_map(repo_path, days=30)
+        ranked_velocity = sorted(velocity_30d.items(), key=lambda kv: kv[1], reverse=True)
+        velocity_rank_by_file = {path: idx + 1 for idx, (path, _) in enumerate(ranked_velocity)}
+        top_high_velocity_files = [
+            {"path": path, "change_velocity_30d": count}
+            for path, count in ranked_velocity[:10]
+            if count > 0
+        ]
         high_velocity_core = set(self.identify_high_velocity_core(velocity_30d, file_fraction=0.2, change_fraction=0.8))
-
+        file_errors: list[dict[str, str]] = []
+        selected_files: list[tuple[Path, str]] = []
         for file_path in self.analyzer.iter_supported_files(repo_path):
             rel = str(file_path.relative_to(repo_path))
             if include_files is not None and rel not in include_files:
                 continue
-            analysis = self.analyzer.analyze_module(file_path, repo_path)
-            velocity = velocity_30d.get(analysis.path, 0)
-            module = ModuleNode(
-                path=analysis.path,
-                language=analysis.language,
-                complexity_score=analysis.complexity_score,
-                change_velocity_30d=velocity,
-                is_high_velocity_core=analysis.path in high_velocity_core,
-                imports=analysis.imports,
-                public_functions=analysis.public_functions,
-                classes=analysis.classes,
-                class_inheritance=analysis.class_inheritance,
-                loc=analysis.loc,
-                comment_ratio=analysis.comment_ratio,
-                last_modified=self.get_last_modified_iso(file_path),
-            )
-            modules[module.path] = module
-            kg.add_node(module.path, "module", **module.model_dump())
-            for fn_name, signature in analysis.function_signatures.items():
-                qname = f"{module.path}::{fn_name}"
-                fn = FunctionNode(
-                    qualified_name=qname,
-                    parent_module=module.path,
-                    signature=signature,
-                    is_public_api=fn_name in module.public_functions,
-                )
-                function_nodes[qname] = fn
-                kg.add_node(qname, "function", **fn.model_dump())
-                kg.add_edge(module.path, qname, EdgeType.CONFIGURES, analysis_method="python_ast")
+            selected_files.append((file_path, rel))
 
-            for caller, callee in analysis.function_calls:
-                src = f"{module.path}::{caller}"
-                # intra-module call edges (direct)
-                dst = f"{module.path}::{callee}"
-                if src in function_nodes and dst in function_nodes:
-                    function_nodes[src].call_count_within_repo += 1
-                    kg.graph.nodes[src]["call_count_within_repo"] = function_nodes[src].call_count_within_repo
-                    kg.add_edge(src, dst, EdgeType.CALLS, analysis_method="python_ast")
+        if progress_callback:
+            progress_callback(f"Surveyor: analyzing {len(selected_files)} supported files.")
+
+        for idx, (file_path, rel) in enumerate(selected_files, start=1):
+            try:
+                analysis = self.analyzer.analyze_module(file_path, repo_path)
+                velocity = velocity_30d.get(analysis.path, 0)
+                module = ModuleNode(
+                    path=analysis.path,
+                    language=analysis.language,
+                    complexity_score=analysis.complexity_score,
+                    change_velocity_30d=velocity,
+                    velocity_rank_30d=velocity_rank_by_file.get(analysis.path, 0),
+                    is_high_velocity_core=analysis.path in high_velocity_core,
+                    imports=analysis.imports,
+                    public_functions=analysis.public_functions,
+                    classes=analysis.classes,
+                    class_inheritance=analysis.class_inheritance,
+                    loc=analysis.loc,
+                    comment_ratio=analysis.comment_ratio,
+                    last_modified=self.get_last_modified_iso(file_path),
+                )
+                modules[module.path] = module
+                kg.add_module_node(module)
+                for fn_name, signature in analysis.function_signatures.items():
+                    qname = f"{module.path}::{fn_name}"
+                    fn = FunctionNode(
+                        qualified_name=qname,
+                        parent_module=module.path,
+                        signature=signature,
+                        is_public_api=fn_name in module.public_functions,
+                    )
+                    function_nodes[qname] = fn
+                    kg.add_function_node(fn)
+                    kg.add_configures_edge(module.path, qname, analysis_method="python_ast")
+
+                for caller, callee in analysis.function_calls:
+                    src = f"{module.path}::{caller}"
+                    # intra-module call edges (direct)
+                    dst = f"{module.path}::{callee}"
+                    if src in function_nodes and dst in function_nodes:
+                        function_nodes[src].call_count_within_repo += 1
+                        kg.graph.nodes[src]["call_count_within_repo"] = function_nodes[src].call_count_within_repo
+                        kg.add_calls_edge(src, dst, analysis_method="python_ast")
+            except Exception as exc:
+                file_errors.append({"file": rel, "error": str(exc)})
+                if progress_callback:
+                    progress_callback(f"Surveyor: skipping {rel} due to error: {exc}")
+                continue
+
+            if progress_callback and (idx % 25 == 0 or idx == len(selected_files)):
+                progress_callback(f"Surveyor: analyzed {idx}/{len(selected_files)} files.")
 
         path_lookup = set(modules.keys())
         for module in modules.values():
             for imp in module.imports:
                 target_path = self._guess_import_target(imp, module.path, path_lookup)
                 if target_path:
-                    kg.add_edge(module.path, target_path, EdgeType.IMPORTS, weight=1.0)
+                    kg.add_imports_edge(module.path, target_path, weight=1.0)
 
-        # Dead code candidate heuristic: public symbols but no inbound imports.
         import_graph = kg.module_import_graph()
+        pagerank_scores = kg.pagerank(module_import_only=True)
+        scc_components = self._cycle_components(kg)
+        cycle_by_module = self._cycle_membership(scc_components)
+
+        # Dead code candidate heuristic: exported symbols with no inbound imports.
+        dead_code_candidates: list[dict[str, object]] = []
         for module in modules.values():
-            if module.public_functions and import_graph.in_degree(module.path) == 0:
-                module.is_dead_code_candidate = True
-                kg.graph.nodes[module.path]["is_dead_code_candidate"] = True
+            in_degree = import_graph.in_degree(module.path) if module.path in import_graph else 0
+            dead_code_symbols = sorted(module.public_functions) if module.public_functions and in_degree == 0 else []
+            module.dead_code_symbols = dead_code_symbols
+            module.is_dead_code_candidate = bool(dead_code_symbols)
+            module.pagerank_score = pagerank_scores.get(module.path, 0.0)
+
+            cycle_info = cycle_by_module.get(module.path)
+            module.is_in_import_cycle = cycle_info is not None
+            module.import_cycle_id = cycle_info["cycle_id"] if cycle_info else ""
+            module.import_cycle_size = cycle_info["size"] if cycle_info else 0
+            module.import_cycle_members = cycle_info["members"] if cycle_info else []
+
+            kg.graph.nodes[module.path]["dead_code_symbols"] = module.dead_code_symbols
+            kg.graph.nodes[module.path]["is_dead_code_candidate"] = module.is_dead_code_candidate
+            kg.graph.nodes[module.path]["pagerank_score"] = module.pagerank_score
+            kg.graph.nodes[module.path]["is_in_import_cycle"] = module.is_in_import_cycle
+            kg.graph.nodes[module.path]["import_cycle_id"] = module.import_cycle_id
+            kg.graph.nodes[module.path]["import_cycle_size"] = module.import_cycle_size
+            kg.graph.nodes[module.path]["import_cycle_members"] = module.import_cycle_members
+            kg.graph.nodes[module.path]["import_in_degree"] = in_degree
+            if module.is_dead_code_candidate:
+                dead_code_candidates.append({"path": module.path, "symbols": module.dead_code_symbols})
+
+        top_pagerank_modules = [
+            {"path": path, "pagerank_score": score}
+            for path, score in sorted(pagerank_scores.items(), key=lambda kv: kv[1], reverse=True)[:10]
+        ]
+        structured_cycles = [
+            {"cycle_id": f"cycle_{idx + 1}", "size": len(component), "members": component}
+            for idx, component in enumerate(scc_components)
+        ]
+        kg.graph.graph["surveyor_insights"] = {
+            "top_high_velocity_files": top_high_velocity_files,
+            "top_pagerank_modules": top_pagerank_modules,
+            "import_cycles": structured_cycles,
+            "dead_code_candidates": dead_code_candidates,
+        }
 
         trace.append(
             TraceEvent(
@@ -90,10 +157,26 @@ class SurveyorAgent:
                     "functions": len(function_nodes),
                     "edges": kg.graph.number_of_edges(),
                     "high_velocity_core_count": len(high_velocity_core),
+                    "top_high_velocity_files": top_high_velocity_files,
+                    "top_pagerank_modules": top_pagerank_modules,
+                    "import_cycle_count": len(scc_components),
+                    "dead_code_candidate_count": len(dead_code_candidates),
                 },
                 confidence="high",
             )
         )
+        if file_errors:
+            trace.append(
+                TraceEvent(
+                    agent="surveyor",
+                    action="files_skipped_on_error",
+                    evidence={
+                        "failed_file_count": len(file_errors),
+                        "failed_files": file_errors[:100],
+                    },
+                    confidence="medium",
+                )
+            )
         return kg, modules, trace
 
     def extract_git_velocity(self, repo_path: Path, rel_path: str, days: int = 30) -> int:
@@ -215,3 +298,16 @@ class SurveyorAgent:
                 seen.add(candidate)
                 ordered.append(candidate)
         return ordered
+
+    def _cycle_components(self, graph: KnowledgeGraph) -> list[list[str]]:
+        components = graph.strongly_connected_components(module_import_only=True)
+        return sorted(components, key=lambda comp: (-len(comp), comp[0] if comp else ""))
+
+    def _cycle_membership(self, components: list[list[str]]) -> dict[str, dict[str, object]]:
+        membership: dict[str, dict[str, object]] = {}
+        for idx, component in enumerate(components):
+            cycle_id = f"cycle_{idx + 1}"
+            size = len(component)
+            for module_path in component:
+                membership[module_path] = {"cycle_id": cycle_id, "size": size, "members": component}
+        return membership
