@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import json
 import time
 from pathlib import Path
 
 from src.orchestrator import CartographyOrchestrator
+from src.graph.knowledge_graph import KnowledgeGraph
 
 
 def test_orchestrator_incremental_detects_changed_files(mini_repo_copy: Path, deterministic_semantics: None) -> None:
@@ -29,3 +31,82 @@ def test_orchestrator_incremental_updates_trace(mini_repo_copy: Path, determinis
     orchestrator.analyze(incremental=True)
     trace_text = (mini_repo_copy / ".cartography" / "cartography_trace.jsonl").read_text(encoding="utf-8")
     assert '"action": "incremental_update"' in trace_text
+
+
+def test_orchestrator_state_contains_repository_metadata(
+    mini_repo_copy: Path, deterministic_semantics: None, monkeypatch
+) -> None:
+    monkeypatch.setattr(
+        "src.orchestrator.repository_metadata",
+        lambda *_: {
+            "owner": "openedx",
+            "repo_name": "ol-data-platform",
+            "branch": "main",
+            "display_name": "openedx/ol-data-platform",
+            "repo_url": "https://github.com/openedx/ol-data-platform",
+        },
+    )
+
+    orchestrator = CartographyOrchestrator(repo_path=mini_repo_copy, out_dir=mini_repo_copy / ".cartography")
+    orchestrator.analyze(incremental=False)
+
+    state = json.loads((mini_repo_copy / ".cartography" / "state.json").read_text(encoding="utf-8"))
+    assert state["repository"]["owner"] == "openedx"
+    assert state["repository"]["repo_name"] == "ol-data-platform"
+    assert state["repository"]["branch"] == "main"
+    assert state["repository"]["display_name"] == "openedx/ol-data-platform"
+
+
+def test_orchestrator_logs_progress(mini_repo_copy: Path, deterministic_semantics: None, capsys) -> None:
+    orchestrator = CartographyOrchestrator(repo_path=mini_repo_copy, out_dir=mini_repo_copy / ".cartography")
+    orchestrator.analyze(incremental=False)
+
+    output = capsys.readouterr().out
+    assert "Running Surveyor agent." in output
+    assert "Running Hydrologist agent." in output
+    assert "Serializing artifacts to" in output
+
+
+def test_orchestrator_skips_failed_surveyor_file(
+    mini_repo_copy: Path, deterministic_semantics: None, monkeypatch
+) -> None:
+    orchestrator = CartographyOrchestrator(repo_path=mini_repo_copy, out_dir=mini_repo_copy / ".cartography")
+    original_analyze_module = orchestrator.surveyor.analyzer.analyze_module
+
+    def flaky_analyze_module(path: Path, repo_root: Path):
+        if path.name == "helpers.py":
+            raise RuntimeError("synthetic parser failure")
+        return original_analyze_module(path, repo_root)
+
+    monkeypatch.setattr(orchestrator.surveyor.analyzer, "analyze_module", flaky_analyze_module)
+    artifacts = orchestrator.analyze(incremental=False)
+
+    module_graph = KnowledgeGraph.load(Path(artifacts["module_graph"]))
+    assert "pipeline.py" in module_graph.graph
+    assert "helpers.py" not in module_graph.graph
+
+    trace_text = Path(artifacts["trace"]).read_text(encoding="utf-8")
+    assert '"agent": "surveyor"' in trace_text
+    assert '"action": "files_skipped_on_error"' in trace_text
+
+
+def test_orchestrator_skips_failed_hydrologist_file(
+    mini_repo_copy: Path, deterministic_semantics: None, monkeypatch
+) -> None:
+    orchestrator = CartographyOrchestrator(repo_path=mini_repo_copy, out_dir=mini_repo_copy / ".cartography")
+    original_extract_sql = orchestrator.hydrologist.sql.extract_from_file
+
+    def flaky_extract_sql(path: Path, repo_root: Path):
+        if path.name == "model.sql":
+            raise RuntimeError("synthetic sql failure")
+        return original_extract_sql(path, repo_root)
+
+    monkeypatch.setattr(orchestrator.hydrologist.sql, "extract_from_file", flaky_extract_sql)
+    artifacts = orchestrator.analyze(incremental=False)
+
+    lineage_graph = KnowledgeGraph.load(Path(artifacts["lineage_graph"]))
+    assert lineage_graph.graph.number_of_nodes() > 0
+
+    trace_text = Path(artifacts["trace"]).read_text(encoding="utf-8")
+    assert '"agent": "hydrologist"' in trace_text
+    assert '"action": "files_skipped_on_error"' in trace_text

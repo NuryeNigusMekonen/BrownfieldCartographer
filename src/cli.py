@@ -12,7 +12,7 @@ from src.agents.hydrologist import HydrologistAgent
 from src.agents.navigator import NavigatorAgent, NavigatorLangGraphAgent
 from src.graph.knowledge_graph import KnowledgeGraph
 from src.orchestrator import CartographyOrchestrator
-from src.repo import DEFAULT_WORKSPACE_REPO_ROOT, resolve_repo_input
+from src.repo import DEFAULT_WORKSPACE_REPO_ROOT, is_github_url, resolve_repo_input
 from backend.workspace_api import serve_workspace
 from src.visualization.graph_viz import render_lineage_graph, render_module_graph, write_visualization_debug
 
@@ -27,6 +27,9 @@ HYDRO_TOOL_ALIASES = {
     "downstream": "downstream",
     "trace_lineage": "trace_lineage",
     "blast_radius": "blast_radius",
+    "pipeline_impact": "pipeline_impact_report",
+    "impact_report": "pipeline_impact_report",
+    "pipeline_impact_report": "pipeline_impact_report",
 }
 
 NAV_TOOL_ALIASES = {
@@ -59,7 +62,7 @@ def _resolve_checkout_root(checkout_root: str | None) -> Path | None:
 
 @app.command()
 def analyze(
-    repo: str = typer.Argument(".", help="Local repo path"),
+    repo: str = typer.Argument(".", help="Local repo path or GitHub URL"),
     output: str = typer.Option(".cartography", "--output", "-o"),
     checkout_root: str | None = typer.Option(
         None,
@@ -68,9 +71,13 @@ def analyze(
     ),
     incremental: bool = typer.Option(True, "--incremental/--no-incremental"),
 ) -> None:
+    if is_github_url(repo):
+        print(f"[cyan]Repository source:[/cyan] GitHub URL {repo}")
     repo_path = resolve_repo_input(repo, checkout_root=_resolve_checkout_root(checkout_root))
     out_dir = _resolve_output_dir(repo_path, output)
-    orchestrator = CartographyOrchestrator(repo_path=repo_path, out_dir=out_dir)
+    print(f"[cyan]Analyzing checkout:[/cyan] {repo_path}")
+    print(f"[cyan]Output directory:[/cyan] {out_dir}")
+    orchestrator = CartographyOrchestrator(repo_path=repo_path, out_dir=out_dir, repo_input=repo)
     if incremental:
         changed = orchestrator.changed_files_since_last_run()
         if changed:
@@ -82,10 +89,13 @@ def analyze(
 
 @app.command()
 def query(
-    repo: str = typer.Argument(".", help="Local repo path"),
+    repo: str = typer.Argument(".", help="Local repo path or GitHub URL"),
     tool: str = typer.Argument(
         ...,
-        help="find_implementation|trace_lineage|blast_radius|explain_module|what_feeds_table|what_depends_on_output",
+        help=(
+            "find_implementation|trace_lineage|blast_radius|pipeline_impact_report|"
+            "explain_module|what_feeds_table|what_depends_on_output"
+        ),
     ),
     arg: str = typer.Argument(..., help="Tool argument"),
     checkout_root: str | None = typer.Option(
@@ -253,12 +263,14 @@ def _run_query_tool(
                 "evidence": [entry.get("evidence", {}) for entry in module_impacted],
             }
         return hydro_result
+    if normalized_tool == "pipeline_impact_report":
+        return hydrologist.pipeline_impact_report(arg)
 
     result = lang_nav.run(tool=normalized_tool, arg=arg, direction=direction)
     if isinstance(result, dict) and "error" in result:
         raise ValueError(
             f"Unsupported tool '{normalized_tool}'. Supported tools: "
-            "trace_lineage, what_feeds_table, what_depends_on_output, blast_radius, "
+            "trace_lineage, what_feeds_table, what_depends_on_output, blast_radius, pipeline_impact_report, "
             "upstream, downstream, feeds, depends_on, find_implementation, explain_module."
         )
     return result

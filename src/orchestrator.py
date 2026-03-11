@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 import json
 import subprocess
 import time
@@ -11,14 +12,23 @@ from src.agents.semanticist import SemanticistAgent
 from src.agents.surveyor import SurveyorAgent
 from src.graph.knowledge_graph import KnowledgeGraph
 from src.models.schemas import ModuleNode, TraceEvent
+from src.repo import repository_metadata
 
 
 class CartographyOrchestrator:
-    def __init__(self, repo_path: Path, out_dir: Path | None = None) -> None:
+    def __init__(
+        self,
+        repo_path: Path,
+        out_dir: Path | None = None,
+        repo_input: str | None = None,
+        progress_callback: Callable[[str], None] | None = None,
+    ) -> None:
         self.repo_path = repo_path.resolve()
         self.out_dir = out_dir or (self.repo_path / ".cartography")
         self.out_dir.mkdir(parents=True, exist_ok=True)
         self.state_file = self.out_dir / "state.json"
+        self.repo_input = (repo_input or str(self.repo_path)).strip()
+        self._progress_callback = progress_callback or self._default_progress
 
         self.surveyor = SurveyorAgent()
         self.hydrologist = HydrologistAgent()
@@ -26,18 +36,27 @@ class CartographyOrchestrator:
         self.archivist = ArchivistAgent(self.out_dir)
 
     def analyze(self, incremental: bool = True) -> dict[str, str]:
+        self._progress(f"Starting analysis for {self.repo_path}")
         trace: list[TraceEvent] = []
         changed_files = self.changed_files_since_last_run() if incremental else []
         use_incremental = bool(changed_files) and self._has_previous_artifacts()
         if use_incremental:
+            self._progress(f"Incremental mode: re-analyzing {len(changed_files)} changed files.")
             module_graph, modules, lineage_graph, tr = self._analyze_incremental(changed_files)
             trace.extend(tr)
         else:
-            module_graph, modules, tr = self.surveyor.run(self.repo_path)
+            self._progress("Running Surveyor agent.")
+            module_graph, modules, tr = self.surveyor.run(self.repo_path, progress_callback=self._progress)
             trace.extend(tr)
-            lineage_graph, tr = self.hydrologist.run(self.repo_path, lineage_graph=KnowledgeGraph())
+            self._progress("Running Hydrologist agent.")
+            lineage_graph, tr = self.hydrologist.run(
+                self.repo_path,
+                lineage_graph=KnowledgeGraph(),
+                progress_callback=self._progress,
+            )
             trace.extend(tr)
 
+        self._progress("Running Semanticist agent.")
         modules, tr = self.semanticist.run(self.repo_path, modules)
         trace.extend(tr)
 
@@ -74,6 +93,7 @@ class CartographyOrchestrator:
             )
         )
 
+        self._progress(f"Serializing artifacts to {self.out_dir}")
         module_graph_path = self.archivist.write_module_graph(module_graph)
         lineage_graph_path = self.archivist.write_lineage_graph(lineage_graph)
         semantic_index_path = self.archivist.write_semantic_index(modules)
@@ -81,6 +101,7 @@ class CartographyOrchestrator:
         brief_path = self.archivist.generate_onboarding_brief(day_one)
         trace_path = self.archivist.write_trace(trace)
         self._save_state()
+        self._progress("Analysis complete.")
 
         return {
             "module_graph": str(module_graph_path),
@@ -92,7 +113,18 @@ class CartographyOrchestrator:
         }
 
     def _save_state(self) -> None:
-        data = {"head": self._git_head(), "analyzed_at_epoch": time.time()}
+        metadata = repository_metadata(self.repo_input, self.repo_path)
+        data = {
+            "head": self._git_head(),
+            "analyzed_at_epoch": time.time(),
+            "repository": {
+                "owner": metadata["owner"],
+                "repo_name": metadata["repo_name"],
+                "branch": metadata["branch"],
+                "display_name": metadata["display_name"],
+                "url": metadata["repo_url"],
+            },
+        }
         self.state_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
     def changed_files_since_last_run(self) -> list[str]:
@@ -148,6 +180,7 @@ class CartographyOrchestrator:
     ) -> tuple[KnowledgeGraph, dict[str, ModuleNode], KnowledgeGraph, list[TraceEvent]]:
         trace: list[TraceEvent] = []
         include = set(changed_files)
+        self._progress(f"Loading existing artifacts from {self.out_dir}")
 
         module_graph = KnowledgeGraph.load(self.out_dir / "module_graph.json")
         lineage_graph = KnowledgeGraph.load(self.out_dir / "lineage_graph.json")
@@ -156,10 +189,19 @@ class CartographyOrchestrator:
         self._prune_module_graph(module_graph, modules, include)
         self._prune_lineage_graph(lineage_graph, include)
 
-        fresh_module_graph, fresh_modules, tr = self.surveyor.run(self.repo_path, include_files=include)
+        self._progress("Running Surveyor agent on changed files.")
+        fresh_module_graph, fresh_modules, tr = self.surveyor.run(
+            self.repo_path,
+            include_files=include,
+            progress_callback=self._progress,
+        )
         trace.extend(tr)
+        self._progress("Running Hydrologist agent on changed files.")
         fresh_lineage_graph, tr = self.hydrologist.run(
-            self.repo_path, lineage_graph=KnowledgeGraph(), include_files=include
+            self.repo_path,
+            lineage_graph=KnowledgeGraph(),
+            include_files=include,
+            progress_callback=self._progress,
         )
         trace.extend(tr)
 
@@ -207,3 +249,9 @@ class CartographyOrchestrator:
         for node in to_remove:
             if node in graph.graph:
                 graph.graph.remove_node(node)
+
+    def _progress(self, message: str) -> None:
+        self._progress_callback(message)
+
+    def _default_progress(self, message: str) -> None:
+        print(f"[orchestrator] {message}")
