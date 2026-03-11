@@ -10,6 +10,11 @@ def test_normalize_repo_name_for_github_urls() -> None:
     assert repo.normalize_repo_name("git@github.com:meltano/meltano.git") == "meltano"
 
 
+def test_extract_repo_owner_and_name_from_repo_urls() -> None:
+    assert repo.extract_repo_owner_and_name("https://github.com/dbt-labs/jaffle_shop.git") == ("dbt-labs", "jaffle_shop")
+    assert repo.extract_repo_owner_and_name("git@github.com:meltano/meltano.git") == ("meltano", "meltano")
+
+
 def test_normalize_repo_name_for_local_paths(tmp_path: Path) -> None:
     source = tmp_path / "my pipeline@2026"
     source.mkdir()
@@ -79,3 +84,18 @@ def test_resolve_github_repo_fetches_existing_checkout(tmp_path: Path, monkeypat
         ["-C", str(repo_dir), "fetch", "--all"],
         ["-C", str(repo_dir), "pull", "--ff-only"],
     ]
+
+
+def test_repository_metadata_uses_remote_when_input_is_local_path(tmp_path: Path, monkeypatch) -> None:
+    repo_dir = tmp_path / "checkout"
+    repo_dir.mkdir()
+
+    monkeypatch.setattr(repo, "_git_origin_url", lambda _: "git@github.com:openedx/ol-data-platform.git")
+    monkeypatch.setattr(repo, "git_current_branch", lambda _: "main")
+
+    metadata = repo.repository_metadata(str(repo_dir), repo_dir)
+
+    assert metadata["owner"] == "openedx"
+    assert metadata["repo_name"] == "ol-data-platform"
+    assert metadata["display_name"] == "openedx/ol-data-platform"
+    assert metadata["branch"] == "main"
