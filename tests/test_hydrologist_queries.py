@@ -68,3 +68,29 @@ def test_hydrologist_empty_structures_for_unknown_dataset(mini_repo_copy: Path) 
     assert blast["impacted_nodes"] == []
     assert blast["impact_count"] == 0
     assert blast["evidence"] == []
+
+
+def test_hydrologist_pipeline_impact_report_for_pipeline_node(mini_repo_copy: Path) -> None:
+    graph, _ = HydrologistAgent().run(mini_repo_copy)
+    agent = HydrologistAgent(graph)
+
+    report = agent.pipeline_impact_report("pipeline::extract_task")
+    impacted_nodes = [entry["node"] for entry in report["impacted_nodes"]]
+
+    assert report["target"] == "pipeline::extract_task"
+    assert report["target_node_type"] == "pipeline"
+    assert report["impact_count"] >= 1
+    assert "pipeline::transform_task" in impacted_nodes
+    assert report["summary"]["node_type_counts"].get("pipeline", 0) >= 1
+
+
+def test_hydrologist_assigns_domain_specific_transformation_types(mini_repo_copy: Path) -> None:
+    graph, _ = HydrologistAgent().run(mini_repo_copy)
+    transformation_types = [
+        str(attrs.get("transformation_type", ""))
+        for _, attrs in graph.graph.nodes(data=True)
+        if attrs.get("node_type") == "transformation"
+    ]
+
+    assert any(t.startswith("sql_") for t in transformation_types)
+    assert any(t.startswith("python_") for t in transformation_types)
