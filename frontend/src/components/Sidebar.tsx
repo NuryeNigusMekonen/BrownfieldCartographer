@@ -41,11 +41,11 @@ export function Sidebar({
         <select value={activeRepoId} onChange={(event) => onSessionSelect(event.target.value)}>
           {sessions.map((session) => (
             <option value={session.repo_id} key={session.repo_id}>
-              {session.repo_name}
+              {session.repo_display_name ?? `local/${session.repo_name}`}
             </option>
           ))}
         </select>
-        <p className="muted tiny">{active?.repo_input ?? "No active repository"}</p>
+        <p className="muted tiny">Branch: {active?.repo_branch ?? "unknown"}</p>
         <button className="primary-action" onClick={onOpenIntake}>
           Analyze New Repository
         </button>
@@ -74,7 +74,7 @@ export function Sidebar({
                 className={session.repo_id === activeRepoId ? "active" : ""}
                 onClick={() => onSessionSelect(session.repo_id)}
               >
-                <span>{session.repo_name}</span>
+                <span>{session.repo_display_name ?? `local/${session.repo_name}`}</span>
                 <small>{session.last_analysis_timestamp}</small>
               </button>
             </li>

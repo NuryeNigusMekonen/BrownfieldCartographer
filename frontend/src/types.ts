@@ -6,6 +6,14 @@ export type WorkspaceView =
   | "archivist"
   | "navigator";
 
+export interface RepositoryMetadata {
+  owner: string;
+  repo_name: string;
+  branch: string;
+  display_name: string;
+  url?: string;
+}
+
 export interface ArtifactInfo {
   name: string;
   exists: boolean;
@@ -15,6 +23,10 @@ export interface ArtifactInfo {
 export interface RepoSession {
   repo_id: string;
   repo_name: string;
+  repo_owner?: string;
+  repo_branch?: string;
+  repo_display_name?: string;
+  repo_url?: string;
   repo_input: string;
   repo_path: string;
   cartography_dir: string;
@@ -28,8 +40,10 @@ export interface RepoSession {
 export interface SummaryPayload {
   repo_name: string;
   cartography_dir: string;
+  repository?: RepositoryMetadata;
   last_analysis_timestamp: string;
   artifact_status: string;
+  artifact_count?: number;
   artifacts: string[];
   metrics: {
     modules: number;
@@ -100,6 +114,11 @@ export interface QueryPayload {
 export interface InspectorState {
   title: string;
   subtitle?: string;
+  module_profile?: {
+    filename: string;
+    module_type: string;
+    folder_path: string;
+  };
   data?: Record<string, unknown>;
   evidence?: unknown;
 }

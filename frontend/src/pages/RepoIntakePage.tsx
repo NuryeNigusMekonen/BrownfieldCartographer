@@ -67,8 +67,8 @@ export function RepoIntakePage({ sessions, analyzing, analyzeError, onAnalyze, o
             {sessions.slice(0, 12).map((session) => (
               <li key={session.repo_id}>
                 <button onClick={() => onOpenSession(session.repo_id)}>
-                  <strong>{session.repo_name}</strong>
-                  <span>{session.repo_input}</span>
+                  <strong>{session.repo_display_name ?? `local/${session.repo_name}`}</strong>
+                  <span>Branch: {session.repo_branch ?? "unknown"}</span>
                   <small>{session.last_analysis_timestamp}</small>
                 </button>
               </li>

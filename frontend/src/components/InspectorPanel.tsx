@@ -26,6 +26,26 @@ export function InspectorPanel({ inspector }: InspectorPanelProps) {
         {inspector.subtitle ? <p className="muted">{inspector.subtitle}</p> : null}
       </div>
 
+      {inspector.module_profile ? (
+        <section className="panel compact inspector-section">
+          <p className="eyebrow">Module Details</p>
+          <dl className="inspector-list module-profile-list">
+            <div>
+              <dt>Module</dt>
+              <dd className="module-file">{inspector.module_profile.filename}</dd>
+            </div>
+            <div>
+              <dt>Location</dt>
+              <dd className="module-folder">{inspector.module_profile.folder_path}</dd>
+            </div>
+            <div>
+              <dt>Language</dt>
+              <dd>{inspector.module_profile.module_type}</dd>
+            </div>
+          </dl>
+        </section>
+      ) : null}
+
       {inspector.data ? (
         <section className="panel compact inspector-section">
           <p className="eyebrow">Metadata</p>

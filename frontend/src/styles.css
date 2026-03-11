@@ -389,20 +389,24 @@ button:disabled {
 .header-main {
   min-width: 0;
   display: grid;
-  gap: 5px;
+  gap: 8px;
 }
 
-.header-main p.muted {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: min(64ch, 100%);
+.repo-display-name {
+  font-size: clamp(1.28rem, 2.2vw, 1.95rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.header-main .status-grid {
+  justify-content: flex-start;
 }
 
 .header-right {
   display: grid;
-  gap: 9px;
+  gap: 10px;
   justify-items: end;
+  align-content: start;
 }
 
 .status-grid {
@@ -415,11 +419,11 @@ button:disabled {
 .status-pill {
   display: inline-grid;
   gap: 2px;
-  padding: 8px 11px;
+  padding: 7px 11px;
   border-radius: 999px;
   border: 1px solid rgba(188, 202, 218, 0.76);
   background: linear-gradient(180deg, rgba(246, 250, 255, 0.95), rgba(239, 246, 253, 0.95));
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text);
   box-shadow: var(--shadow-xs);
 }
@@ -435,6 +439,7 @@ button:disabled {
   color: var(--success);
   background: linear-gradient(180deg, rgba(234, 249, 244, 0.96), rgba(227, 246, 240, 0.95));
   border-color: rgba(38, 127, 97, 0.34);
+  font-weight: 610;
 }
 
 .repo-switcher {
@@ -872,6 +877,18 @@ pre {
   line-height: 1.45;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.module-profile-list .module-file {
+  font-size: 1rem;
+  font-weight: 640;
+  color: var(--text-strong);
+}
+
+.module-profile-list .module-folder {
+  font-size: 0.79rem;
+  color: var(--muted);
+  font-family: "IBM Plex Mono", "SFMono-Regular", Menlo, monospace;
 }
 
 .intake-shell {

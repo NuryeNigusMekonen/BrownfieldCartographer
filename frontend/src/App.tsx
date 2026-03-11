@@ -42,6 +42,59 @@ interface QueryHistoryItem {
   timestamp: string;
 }
 
+function splitModulePath(modulePath: string): { filename: string; folderPath: string } {
+  const normalized = modulePath.replaceAll("\\", "/").trim();
+  const parts = normalized.split("/").filter(Boolean);
+  if (!parts.length) {
+    return { filename: modulePath || "Unknown module", folderPath: "Repository root" };
+  }
+  const filename = parts[parts.length - 1] ?? modulePath;
+  const folderPath = parts.length > 1 ? parts.slice(0, -1).join("/") : "Repository root";
+  return { filename, folderPath };
+}
+
+function titleCase(input: string): string {
+  if (!input) return "Unknown";
+  return input
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((part) => part[0].toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+}
+
+function moduleTypeFromData(data: Record<string, unknown>): string {
+  const explicit = String(data.module_type ?? "").trim();
+  if (explicit) return titleCase(explicit);
+  const language = String(data.language ?? "").trim();
+  if (language) return titleCase(language);
+  return "Unknown";
+}
+
+function buildModuleInspector(path: string, data: Record<string, unknown>, subtitle: string): InspectorState {
+  const safePath = String(path || data.module_path || data.path || data.id || "Unknown module");
+  const { filename, folderPath } = splitModulePath(safePath);
+  const {
+    path: _path,
+    module_path: _modulePath,
+    id: _id,
+    module_file: _moduleFile,
+    module_folder: _moduleFolder,
+    module_type: _moduleType,
+    language: _language,
+    ...rest
+  } = data;
+  return {
+    title: filename,
+    subtitle,
+    module_profile: {
+      filename,
+      folder_path: folderPath,
+      module_type: moduleTypeFromData(data),
+    },
+    data: rest,
+  };
+}
+
 function historyKey(repoId: string): string {
   return `cartographer-history:${repoId}`;
 }
@@ -206,7 +259,7 @@ export default function App() {
 
   async function refreshCurrentRepo() {
     if (!activeSession) return;
-    await runAnalysis(activeSession.repo_input);
+    await runAnalysis(activeSession.repo_url || activeSession.repo_input);
   }
 
   async function loadSummary(repoId: string) {
@@ -254,11 +307,16 @@ export default function App() {
     if (!activeRepoId) return;
     try {
       const details = await fetchNodeDetails(activeRepoId, graph, nodeId);
-      setInspector({
-        title: nodeId,
-        subtitle: graph === "module" ? "Architecture node" : "Lineage node",
-        data: details,
-      });
+      if (graph === "module") {
+        const modulePath = String(details.module_path ?? details.path ?? nodeId);
+        setInspector(buildModuleInspector(modulePath, details, "Module Inspector"));
+      } else {
+        setInspector({
+          title: nodeId,
+          subtitle: "Lineage node",
+          data: details,
+        });
+      }
     } catch (error) {
       setLoadingError(error instanceof Error ? error.message : "Failed to load node details");
     }
@@ -376,11 +434,7 @@ export default function App() {
             onQueryChange={setSemanticQuery}
             onSearch={searchSemantic}
             onSelectModule={(path, moduleData) =>
-              setInspector({
-                title: path,
-                subtitle: "Semantic module purpose",
-                data: moduleData,
-              })
+              setInspector(buildModuleInspector(path, moduleData, "Semantic module purpose"))
             }
           />
         ) : null}

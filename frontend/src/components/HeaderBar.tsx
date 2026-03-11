@@ -8,29 +8,44 @@ interface HeaderBarProps {
 }
 
 export function HeaderBar({ session, summary, onRefresh, refreshPending }: HeaderBarProps) {
+  const repository = summary?.repository;
+  const displayName =
+    repository?.display_name ?? session?.repo_display_name ?? (session ? `local/${session.repo_name}` : "No repository selected");
+  const branch = repository?.branch ?? session?.repo_branch ?? "unknown";
+  const lastAnalysis = summary?.last_analysis_timestamp ?? session?.last_analysis_timestamp ?? "Unknown";
+  const artifactCount = summary?.artifact_count ?? summary?.artifacts?.length ?? session?.available_artifacts?.length ?? 0;
+  const statusLabel = summary?.artifact_status ?? "Loaded";
+
   return (
     <header className="header-bar panel compact">
       <div className="header-main">
         <p className="eyebrow">Repository Dashboard</p>
-        <h2>{session?.repo_name ?? "No repository selected"}</h2>
-        <p className="muted">{session?.repo_input ?? "Select or analyze a repository"}</p>
-      </div>
-
-      <div className="header-right">
+        <h2 className="repo-display-name">{displayName}</h2>
         <div className="status-grid">
           <span className="status-pill">
+            <strong>Repository</strong>
+            {displayName}
+          </span>
+          <span className="status-pill">
+            <strong>Branch</strong>
+            {branch}
+          </span>
+          <span className="status-pill">
             <strong>Last Analysis</strong>
-            {summary?.last_analysis_timestamp ?? session?.last_analysis_timestamp ?? "Unknown"}
+            {lastAnalysis}
           </span>
           <span className="status-pill">
             <strong>Artifacts</strong>
-            {session?.available_artifacts?.length ?? 0}
+            {artifactCount}
           </span>
           <span className="status-pill good">
             <strong>Status</strong>
-            {summary?.artifact_status ?? "Ready"}
+            {statusLabel}
           </span>
         </div>
+      </div>
+
+      <div className="header-right">
         <button className="primary-action" onClick={onRefresh} disabled={!session || refreshPending}>
           {refreshPending ? "Analyzing..." : "Analyze / Refresh"}
         </button>

@@ -6,11 +6,12 @@ interface OverviewPageProps {
 }
 
 export function OverviewPage({ summary, onNavigate }: OverviewPageProps) {
+  const displayName = summary.repository?.display_name ?? summary.repo_name;
   return (
     <div className="stack">
       <section className="panel hero">
         <p className="eyebrow">Repository Summary</p>
-        <h3>{summary.repo_name}</h3>
+        <h3>{displayName}</h3>
         <p className="muted">
           Brownfield Cartographer mapped architecture, lineage, semantics, and onboarding artifacts for this repository.
         </p>
