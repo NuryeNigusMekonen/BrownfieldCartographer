@@ -51,7 +51,11 @@ class PythonDataFlowAnalyzer:
             terminal = lower_fn.split(".")[-1]
 
             if lower_fn.endswith(".read_csv"):
-                dataset, unresolved = self._resolve_first_argument(arguments, variables)
+                dataset, unresolved = self._resolve_argument(
+                    arguments,
+                    variables,
+                    keyword_candidates=("filepath_or_buffer", "path_or_buf", "path"),
+                )
                 out.append(
                     PythonDataFlowEvent(
                         source_file=rel,
@@ -66,7 +70,11 @@ class PythonDataFlowAnalyzer:
                 continue
 
             if lower_fn.endswith(".read_sql"):
-                sql_arg, unresolved = self._resolve_first_argument(arguments, variables)
+                sql_arg, unresolved = self._resolve_argument(
+                    arguments,
+                    variables,
+                    keyword_candidates=("sql", "sql_query", "query"),
+                )
                 if unresolved:
                     out.append(
                         PythonDataFlowEvent(
@@ -98,7 +106,11 @@ class PythonDataFlowAnalyzer:
                 continue
 
             if lower_fn.endswith(".execute") or lower_fn == "execute":
-                sql_arg, unresolved = self._resolve_first_argument(arguments, variables)
+                sql_arg, unresolved = self._resolve_argument(
+                    arguments,
+                    variables,
+                    keyword_candidates=("statement", "sql", "query", "clause"),
+                )
                 if unresolved:
                     out.append(
                         PythonDataFlowEvent(
@@ -130,15 +142,20 @@ class PythonDataFlowAnalyzer:
                 continue
 
             # PySpark read chains (spark.read.csv/parquet/json/load/table/...)
-            if ".read." in lower_fn or lower_fn.endswith(".read"):
-                dataset, unresolved = self._resolve_first_argument(arguments, variables)
+            if ".read." in lower_fn or lower_fn.endswith(".read") or lower_fn.endswith(".table"):
+                dataset, unresolved = self._resolve_argument(
+                    arguments,
+                    variables,
+                    keyword_candidates=("path", "table", "name"),
+                )
+                storage_type = "table" if terminal == "table" else "file"
                 out.append(
                     PythonDataFlowEvent(
                         source_file=rel,
                         line_range=line_range,
                         flow_type="CONSUMES",
                         dataset=dataset,
-                        storage_type="file",
+                        storage_type=storage_type,
                         analysis_method="tree_sitter_python",
                         unresolved=unresolved,
                     )
@@ -159,14 +176,19 @@ class PythonDataFlowAnalyzer:
                 "insertinto",
             }
             if ".write." in lower_fn and terminal in write_methods:
-                dataset, unresolved = self._resolve_first_argument(arguments, variables)
+                dataset, unresolved = self._resolve_argument(
+                    arguments,
+                    variables,
+                    keyword_candidates=("path", "table", "name"),
+                )
+                storage_type = "table" if terminal in {"saveastable", "insertinto"} else "file"
                 out.append(
                     PythonDataFlowEvent(
                         source_file=rel,
                         line_range=line_range,
                         flow_type="PRODUCES",
                         dataset=dataset,
-                        storage_type="file",
+                        storage_type=storage_type,
                         analysis_method="tree_sitter_python",
                         unresolved=unresolved,
                     )
@@ -189,16 +211,42 @@ class PythonDataFlowAnalyzer:
                 mapping[name] = (value, unresolved)
         return mapping
 
-    def _resolve_first_argument(
-        self, argument_list: object, variables: dict[str, tuple[str, bool]]
+    def _resolve_argument(
+        self,
+        argument_list: object,
+        variables: dict[str, tuple[str, bool]],
+        keyword_candidates: tuple[str, ...] = (),
     ) -> tuple[str, bool]:
-        arg_nodes = [c for c in argument_list.children if c.type not in {"(", ")", ","}]
-        if not arg_nodes:
+        positional_args, keyword_args = self._collect_call_arguments(argument_list)
+        chosen_node = None
+        for key in keyword_candidates:
+            if key in keyword_args:
+                chosen_node = keyword_args[key]
+                break
+        if chosen_node is None and positional_args:
+            chosen_node = positional_args[0]
+        if chosen_node is None:
             return self.DYNAMIC_REFERENCE, True
-        value, unresolved = self._resolve_expr_to_string(arg_nodes[0], variables)
+        value, unresolved = self._resolve_expr_to_string(chosen_node, variables)
         if value is None or unresolved:
             return self.DYNAMIC_REFERENCE, True
         return value, False
+
+    def _collect_call_arguments(self, argument_list: object) -> tuple[list[object], dict[str, object]]:
+        positional: list[object] = []
+        keyword: dict[str, object] = {}
+        for child in getattr(argument_list, "children", []):
+            if child.type in {"(", ")", ","}:
+                continue
+            if child.type == "keyword_argument":
+                key_node = child.child_by_field_name("name")
+                value_node = child.child_by_field_name("value")
+                key = self._decode(key_node).strip() if key_node else ""
+                if key and value_node:
+                    keyword[key] = value_node
+                continue
+            positional.append(child)
+        return positional, keyword
 
     def _resolve_expr_to_string(
         self, node: object, variables: dict[str, tuple[str, bool]]
@@ -218,6 +266,18 @@ class PythonDataFlowAnalyzer:
                 if left is None or right is None:
                     return None, True
                 return left + right, (ul or ur)
+        if node.type == "call":
+            function = node.child_by_field_name("function")
+            arguments = node.child_by_field_name("arguments")
+            if not function or not arguments:
+                return None, True
+            fn_path = self._flatten_function_path(function).lower()
+            if fn_path.endswith(".text") or fn_path == "text":
+                positional, keyword = self._collect_call_arguments(arguments)
+                target = positional[0] if positional else keyword.get("text")
+                if target is None:
+                    return None, True
+                return self._resolve_expr_to_string(target, variables)
         return None, True
 
     def _string_literal_value(self, node: object) -> tuple[str | None, bool]:
