@@ -6,6 +6,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from src.repo import repository_metadata
+
 
 REQUIRED_ARTIFACTS = [
     "module_graph.json",
@@ -96,10 +98,15 @@ class WorkspaceSessionStore:
         timestamp = self._format_timestamp(analyzed_at_epoch)
         artifacts = self._artifact_metadata(cartography_dir)
         available = [item["name"] for item in artifacts if item["exists"]]
+        metadata = self._repository_metadata(state, repo_input, repo_path)
 
         return {
             "repo_id": repo_id,
-            "repo_name": repo_path.name,
+            "repo_name": metadata["repo_name"],
+            "repo_owner": metadata["owner"],
+            "repo_branch": metadata["branch"],
+            "repo_display_name": metadata["display_name"],
+            "repo_url": metadata["repo_url"],
             "repo_input": repo_input,
             "repo_path": str(repo_path),
             "cartography_dir": str(cartography_dir),
@@ -109,6 +116,30 @@ class WorkspaceSessionStore:
             "available_artifacts": available,
             "artifacts": artifacts,
         }
+
+    def _repository_metadata(self, state: dict[str, Any], repo_input: str, repo_path: Path) -> dict[str, str]:
+        repository_state = state.get("repository")
+        payload = repository_metadata(repo_input, repo_path)
+        if not isinstance(repository_state, dict):
+            return payload
+
+        owner = str(repository_state.get("owner") or "").strip()
+        repo_name = str(repository_state.get("repo_name") or "").strip()
+        branch = str(repository_state.get("branch") or "").strip()
+        display_name = str(repository_state.get("display_name") or "").strip()
+        repo_url = str(repository_state.get("url") or "").strip()
+
+        if owner:
+            payload["owner"] = owner
+        if repo_name:
+            payload["repo_name"] = repo_name
+        if branch:
+            payload["branch"] = branch
+        if display_name:
+            payload["display_name"] = display_name
+        if repo_url:
+            payload["repo_url"] = repo_url
+        return payload
 
     def _artifact_metadata(self, cartography_dir: Path) -> list[dict[str, Any]]:
         entries: list[dict[str, Any]] = []

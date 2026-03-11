@@ -19,7 +19,16 @@ from backend.sessions import WorkspaceSessionStore
 from backend.workspace_data import CartographyWorkspaceData
 
 
-ROOT_DIR = Path(__file__).resolve().parents[2]
+def _detect_root_dir() -> Path:
+    current = Path(__file__).resolve()
+    for parent in current.parents:
+        if (parent / "pyproject.toml").exists() and (parent / "frontend").exists() and (parent / "lib").exists():
+            return parent
+    # Fallback for local source execution.
+    return current.parents[1]
+
+
+ROOT_DIR = _detect_root_dir()
 FRONTEND_DIST_DIR = ROOT_DIR / "frontend" / "dist"
 VENDOR_DIR = ROOT_DIR / "lib"
 SESSION_STATE_FILE = ROOT_DIR / ".cartography_workspace" / "sessions.json"
@@ -131,7 +140,7 @@ class WorkspaceBackend:
         started = time.time()
         repo_path = resolve_repo_input(repo_input, checkout_root=checkout_root)
         out_dir = _resolve_output_dir(repo_path, output)
-        orchestrator = CartographyOrchestrator(repo_path=repo_path, out_dir=out_dir)
+        orchestrator = CartographyOrchestrator(repo_path=repo_path, out_dir=out_dir, repo_input=repo_input)
         artifacts = orchestrator.analyze(incremental=incremental)
         session = self.store.upsert_session(repo_input=repo_input, repo_path=repo_path, cartography_dir=out_dir)
 

@@ -16,7 +16,19 @@ def make_cartography(repo_path: Path, analyzed_at_epoch: float = 1_700_000_000.0
     (cartography / "onboarding_brief.md").write_text("# Brief\n", encoding="utf-8")
     (cartography / "cartography_trace.jsonl").write_text("\n", encoding="utf-8")
     (cartography / "state.json").write_text(
-        json.dumps({"head": "abc123", "analyzed_at_epoch": analyzed_at_epoch}),
+        json.dumps(
+            {
+                "head": "abc123",
+                "analyzed_at_epoch": analyzed_at_epoch,
+                "repository": {
+                    "owner": "openedx",
+                    "repo_name": repo_path.name,
+                    "branch": "main",
+                    "display_name": f"openedx/{repo_path.name}",
+                    "url": f"https://github.com/openedx/{repo_path.name}",
+                },
+            }
+        ),
         encoding="utf-8",
     )
     return cartography
@@ -57,6 +69,8 @@ def test_register_cartography_dir(tmp_path: Path) -> None:
     session = store.register_cartography_dir(cartography)
 
     assert session["repo_name"] == "repo"
+    assert session["repo_display_name"] == "openedx/repo"
+    assert session["repo_branch"] == "main"
     assert Path(session["cartography_dir"]) == cartography.resolve()
 
 

@@ -12,6 +12,7 @@ import networkx as nx
 from src.agents.hydrologist import HydrologistAgent
 from src.agents.navigator import NavigatorAgent
 from src.graph.knowledge_graph import KnowledgeGraph
+from src.repo import repository_metadata
 
 
 DAY_ONE_TITLES = {
@@ -33,6 +34,7 @@ class CartographyWorkspaceData:
         self.semantic_index = self._load_semantic_index()
         self.trace = self._load_trace()
         self.state = self._load_state()
+        self.repo_metadata = self._repository_metadata()
 
     def summary_payload(self) -> dict[str, Any]:
         module_graph = self.module_graph.module_import_graph()
@@ -61,19 +63,31 @@ class CartographyWorkspaceData:
             for node_id, score in sorted(centrality.items(), key=lambda item: (-item[1], item[0]))[:5]
         ]
 
+        artifact_names = [
+            "module_graph.json",
+            "lineage_graph.json",
+            "semantic_index/module_purpose_index.jsonl",
+            "cartography_trace.jsonl",
+            "CODEBASE.md",
+            "onboarding_brief.md",
+        ]
+        available_artifacts = [name for name in artifact_names if (self.cartography_dir / name).exists()]
+        artifact_status = "Loaded" if available_artifacts else "Missing"
+
         return {
-            "repo_name": self.cartography_dir.parent.name,
+            "repo_name": self.repo_metadata["repo_name"],
             "cartography_dir": str(self.cartography_dir),
+            "repository": {
+                "owner": self.repo_metadata["owner"],
+                "repo_name": self.repo_metadata["repo_name"],
+                "branch": self.repo_metadata["branch"],
+                "display_name": self.repo_metadata["display_name"],
+                "url": self.repo_metadata["repo_url"],
+            },
             "last_analysis_timestamp": self._state_timestamp(),
-            "artifact_status": "Loaded",
-            "artifacts": [
-                "module_graph.json",
-                "lineage_graph.json",
-                "semantic_index/module_purpose_index.jsonl",
-                "cartography_trace.jsonl",
-                "CODEBASE.md",
-                "onboarding_brief.md",
-            ],
+            "artifact_status": artifact_status,
+            "artifacts": available_artifacts,
+            "artifact_count": len(available_artifacts),
             "metrics": {
                 "modules": len(module_nodes),
                 "functions": sum(len(attrs.get("public_functions", [])) for _, attrs in module_nodes),
@@ -308,12 +322,54 @@ class CartographyWorkspaceData:
             attrs["degree_centrality"] = nx.degree_centrality(graph).get(node_id, 0.0) if graph.number_of_nodes() > 1 else 0.0
             attrs["dead_code_flag"] = bool(attrs.get("is_dead_code_candidate", False))
             attrs["module_path"] = attrs.get("path", node_id)
+            module_path = str(attrs["module_path"])
+            attrs["module_file"] = Path(module_path).name or module_path
+            attrs["module_folder"] = str(Path(module_path).parent).replace("\\", "/")
+            attrs["module_type"] = self._module_type(attrs)
         else:
             attrs["node_type"] = self._infer_node_type(node_id, attrs)
             attrs["upstream_count"] = len(self.lineage_graph.upstream(node_id))
             attrs["downstream_count"] = len(self.lineage_graph.downstream(node_id))
             attrs["display_label"] = self._lineage_label(node_id)
         return attrs
+
+    def _repository_metadata(self) -> dict[str, str]:
+        repository = self.state.get("repository")
+        if isinstance(repository, dict):
+            owner = str(repository.get("owner") or "").strip()
+            repo_name = str(repository.get("repo_name") or "").strip()
+            branch = str(repository.get("branch") or "").strip()
+            display_name = str(repository.get("display_name") or "").strip()
+            repo_url = str(repository.get("url") or "").strip()
+            if owner and repo_name:
+                return {
+                    "owner": owner,
+                    "repo_name": repo_name,
+                    "branch": branch or "unknown",
+                    "display_name": display_name or f"{owner}/{repo_name}",
+                    "repo_url": repo_url,
+                }
+
+        repo_path = self.cartography_dir.parent
+        inferred = repository_metadata(str(repo_path), repo_path)
+        repo_name = inferred.get("repo_name") or repo_path.name
+        owner = inferred.get("owner") or "local"
+        branch = inferred.get("branch") or "unknown"
+        display_name = inferred.get("display_name") or f"{owner}/{repo_name}"
+        repo_url = inferred.get("repo_url") or ""
+        return {
+            "owner": owner,
+            "repo_name": repo_name,
+            "branch": branch,
+            "display_name": display_name,
+            "repo_url": repo_url,
+        }
+
+    def _module_type(self, attrs: dict[str, Any]) -> str:
+        language = str(attrs.get("language") or "").strip()
+        if language:
+            return language.title()
+        return "Unknown"
 
     def _load_semantic_index(self) -> list[dict[str, Any]]:
         path = self.cartography_dir / "semantic_index" / "module_purpose_index.jsonl"

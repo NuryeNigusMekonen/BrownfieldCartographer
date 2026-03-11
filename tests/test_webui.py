@@ -23,6 +23,8 @@ def test_workspace_summary_and_graph_payloads(analyzed_mini_repo: Path) -> None:
 
     assert summary["metrics"]["modules"] > 0
     assert "top_modules" in summary
+    assert "repository" in summary
+    assert "display_name" in summary["repository"]
     assert module_graph["nodes"]
     assert all("degree_centrality" in node for node in module_graph["nodes"])
     assert lineage_graph["nodes"]

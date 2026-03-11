@@ -16,7 +16,19 @@ def _make_cartography(repo_dir: Path, analyzed_at_epoch: float = 1_700_000_000.0
     (cartography / "onboarding_brief.md").write_text("# Brief\n", encoding="utf-8")
     (cartography / "cartography_trace.jsonl").write_text("\n", encoding="utf-8")
     (cartography / "state.json").write_text(
-        json.dumps({"head": "abc123", "analyzed_at_epoch": analyzed_at_epoch}),
+        json.dumps(
+            {
+                "head": "abc123",
+                "analyzed_at_epoch": analyzed_at_epoch,
+                "repository": {
+                    "owner": "dbt-labs",
+                    "repo_name": repo_dir.name,
+                    "branch": "main",
+                    "display_name": f"dbt-labs/{repo_dir.name}",
+                    "url": f"https://github.com/dbt-labs/{repo_dir.name}",
+                },
+            }
+        ),
         encoding="utf-8",
     )
 
@@ -36,4 +48,6 @@ def test_workspace_backend_discovers_sessions_from_test_repos(tmp_path: Path, mo
     assert payload["active_repo_id"]
     assert len(payload["sessions"]) == 1
     assert payload["sessions"][0]["repo_name"] == "jaffle_shop"
+    assert payload["sessions"][0]["repo_display_name"] == "dbt-labs/jaffle_shop"
+    assert payload["sessions"][0]["repo_branch"] == "main"
     assert Path(payload["sessions"][0]["repo_path"]) == repo_dir.resolve()
