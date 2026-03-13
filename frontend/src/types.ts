@@ -88,6 +88,19 @@ export interface SemanticSearchPayload {
   results: Array<Record<string, unknown>>;
 }
 
+export interface OnboardingQuestion {
+  id: string;
+  title: string;
+  answer: string;
+  confidence: "low" | "medium" | "high";
+  confidence_label?: "low" | "medium" | "high";
+  confidence_score?: number | null;
+  confidence_factors?: Record<string, number>;
+  confidence_reason?: string;
+  confidence_components?: Record<string, number>;
+  evidence: Array<Record<string, unknown>>;
+}
+
 export interface ArchivistPayload {
   codebase: {
     markdown: string;
@@ -95,7 +108,7 @@ export interface ArchivistPayload {
   };
   onboarding: {
     markdown: string;
-    questions: Array<Record<string, unknown>>;
+    questions: OnboardingQuestion[];
   };
   trace: Array<Record<string, unknown>>;
   state: Record<string, unknown>;

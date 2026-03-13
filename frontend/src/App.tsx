@@ -451,6 +451,7 @@ export default function App() {
         {archivist ? (
           <ArchivistPage
             payload={archivist}
+            session={activeSession ?? null}
             onInspectTrace={(event) =>
               setInspector({
                 title: String(event.action ?? "Trace event"),
