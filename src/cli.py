@@ -8,8 +8,7 @@ from pathlib import Path
 import typer
 from rich import print
 
-from src.agents.hydrologist import HydrologistAgent
-from src.agents.navigator import NavigatorAgent, NavigatorLangGraphAgent
+from src.agents.navigator import NavigatorLangGraphAgent
 from src.graph.knowledge_graph import KnowledgeGraph
 from src.orchestrator import CartographyOrchestrator
 from src.repo import DEFAULT_WORKSPACE_REPO_ROOT, is_github_url, resolve_repo_input
@@ -18,22 +17,16 @@ from src.visualization.graph_viz import render_lineage_graph, render_module_grap
 
 app = typer.Typer(help="Brownfield Cartographer CLI")
 
-HYDRO_TOOL_ALIASES = {
-    "feeds": "what_feeds_table",
-    "what_feeds_table": "what_feeds_table",
-    "depends_on": "what_depends_on_output",
-    "what_depends_on_output": "what_depends_on_output",
-    "upstream": "upstream",
-    "downstream": "downstream",
+NAV_TOOL_ALIASES = {
+    "upstream": "trace_lineage",
+    "downstream": "trace_lineage",
+    "feeds": "trace_lineage",
+    "depends_on": "trace_lineage",
+    "what_feeds_table": "trace_lineage",
+    "what_depends_on_output": "trace_lineage",
+    "find_implementation": "find_implementation",
     "trace_lineage": "trace_lineage",
     "blast_radius": "blast_radius",
-    "pipeline_impact": "pipeline_impact_report",
-    "impact_report": "pipeline_impact_report",
-    "pipeline_impact_report": "pipeline_impact_report",
-}
-
-NAV_TOOL_ALIASES = {
-    "find_implementation": "find_implementation",
     "explain_module": "explain_module",
 }
 
@@ -93,8 +86,8 @@ def query(
     tool: str = typer.Argument(
         ...,
         help=(
-            "find_implementation|trace_lineage|blast_radius|pipeline_impact_report|"
-            "explain_module|what_feeds_table|what_depends_on_output"
+            "find_implementation|trace_lineage|blast_radius|explain_module "
+            "(aliases: upstream|downstream|feeds|depends_on)"
         ),
     ),
     arg: str = typer.Argument(..., help="Tool argument"),
@@ -117,7 +110,8 @@ def query(
     normalized_tool = _normalize_query_tool(tool)
 
     try:
-        result = _run_query_tool(
+        state = _run_query_tool(
+            raw_tool=tool,
             normalized_tool=normalized_tool,
             arg=arg,
             direction=direction,
@@ -126,10 +120,12 @@ def query(
         )
         payload = {
             "ok": True,
-            "tool": normalized_tool,
-            "arg": arg,
-            "result": result,
+            "tool": str(state["tool"]),
+            "arg": str(state["arg"]),
+            "direction": str(state["direction"]),
+            "result": state["result"],
             "error": None,
+            "evidence": state["evidence"],
         }
         builtins.print(json.dumps(payload, indent=2))
     except ValueError as exc:
@@ -137,8 +133,10 @@ def query(
             "ok": False,
             "tool": normalized_tool or tool,
             "arg": arg,
+            "direction": _normalize_query_direction(tool, direction),
             "result": None,
             "error": str(exc),
+            "evidence": [],
         }
         builtins.print(json.dumps(payload, indent=2))
         raise typer.Exit(code=2)
@@ -215,65 +213,41 @@ def _load_graph(path: Path) -> KnowledgeGraph:
 
 def _normalize_query_tool(tool: str) -> str:
     normalized = tool.strip().lower()
-    if normalized in HYDRO_TOOL_ALIASES:
-        return HYDRO_TOOL_ALIASES[normalized]
     if normalized in NAV_TOOL_ALIASES:
         return NAV_TOOL_ALIASES[normalized]
     return normalized
 
 
+def _normalize_query_direction(tool: str, direction: str) -> str:
+    normalized_tool = tool.strip().lower()
+    if normalized_tool in {"downstream", "depends_on", "what_depends_on_output"}:
+        return "downstream"
+    if normalized_tool in {"upstream", "feeds", "what_feeds_table"}:
+        return "upstream"
+    return "downstream" if direction.strip().lower() == "downstream" else "upstream"
+
+
 def _run_query_tool(
     *,
+    raw_tool: str,
     normalized_tool: str,
     arg: str,
     direction: str,
     module_graph: KnowledgeGraph,
     lineage_graph: KnowledgeGraph,
-) -> object:
-    hydrologist = HydrologistAgent(lineage_graph=lineage_graph)
-    nav = NavigatorAgent(module_graph=module_graph, lineage_graph=lineage_graph)
-    lang_nav = NavigatorLangGraphAgent(nav)
-
-    if normalized_tool == "upstream":
-        return hydrologist.get_upstream(arg)
-    if normalized_tool == "downstream":
-        return hydrologist.get_downstream(arg)
-    if normalized_tool == "trace_lineage":
-        direction = direction.strip().lower()
-        if direction == "downstream":
-            return hydrologist.get_downstream(arg)
-        return hydrologist.get_upstream(arg)
-    if normalized_tool == "what_feeds_table":
-        return hydrologist.what_feeds_table(arg)
-    if normalized_tool == "what_depends_on_output":
-        return hydrologist.what_depends_on_output(arg)
-    if normalized_tool == "blast_radius":
-        hydro_result = hydrologist.blast_radius(arg)
-        # Compatibility: if lineage blast radius is empty and arg is a module path, use Navigator behavior.
-        if (
-            isinstance(hydro_result, dict)
-            and int(hydro_result.get("impact_count", 0)) == 0
-            and arg in module_graph.graph
-        ):
-            module_impacted = nav.blast_radius(arg)
-            return {
-                "target": arg,
-                "impacted_nodes": module_impacted,
-                "impact_count": len(module_impacted),
-                "evidence": [entry.get("evidence", {}) for entry in module_impacted],
-            }
-        return hydro_result
-    if normalized_tool == "pipeline_impact_report":
-        return hydrologist.pipeline_impact_report(arg)
-
-    result = lang_nav.run(tool=normalized_tool, arg=arg, direction=direction)
-    if isinstance(result, dict) and "error" in result:
+) -> dict[str, object]:
+    navigator = NavigatorLangGraphAgent(module_graph=module_graph, lineage_graph=lineage_graph)
+    state = navigator.invoke(
+        tool=normalized_tool,
+        arg=arg,
+        direction=_normalize_query_direction(raw_tool, direction),
+    )
+    if state.get("error"):
         raise ValueError(
             f"Unsupported tool '{normalized_tool}'. Supported tools: "
-            "trace_lineage, what_feeds_table, what_depends_on_output, blast_radius, pipeline_impact_report, "
-            "upstream, downstream, feeds, depends_on, find_implementation, explain_module."
+            "find_implementation, trace_lineage, blast_radius, explain_module."
         )
-    return result
+    return state
 
 
 if __name__ == "__main__":
