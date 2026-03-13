@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import subprocess
 import math
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 
+from src.analyzers.git_history import compute_git_velocity_snapshot
 from src.analyzers.tree_sitter_analyzer import TreeSitterAnalyzer
 from src.graph.knowledge_graph import KnowledgeGraph
 from src.models.schemas import FunctionNode, ModuleNode, TraceEvent
@@ -25,13 +25,21 @@ class SurveyorAgent:
         modules: dict[str, ModuleNode] = {}
         function_nodes: dict[str, FunctionNode] = {}
         trace: list[TraceEvent] = []
-        velocity_30d = self.velocity_map(repo_path, days=30)
-        ranked_velocity = sorted(velocity_30d.items(), key=lambda kv: kv[1], reverse=True)
-        velocity_rank_by_file = {path: idx + 1 for idx, (path, _) in enumerate(ranked_velocity)}
+        velocity_snapshot_30d = compute_git_velocity_snapshot(repo_path, days=30)
+        velocity_30d = {item.path: item.commit_count for item in velocity_snapshot_30d.files}
+        ranked_velocity = sorted(velocity_snapshot_30d.files, key=lambda item: (-item.commit_count, item.path))
+        velocity_rank_by_file = {item.path: idx + 1 for idx, item in enumerate(ranked_velocity)}
         top_high_velocity_files = [
-            {"path": path, "change_velocity_30d": count}
-            for path, count in ranked_velocity[:10]
-            if count > 0
+            {
+                "analysis_method": "git_log_frequency",
+                "path": item.path,
+                "change_velocity_30d": item.commit_count,
+                "commit_count": item.commit_count,
+                "time_window_days": velocity_snapshot_30d.time_window_days,
+                "last_commit_timestamp": item.last_commit_timestamp,
+            }
+            for item in ranked_velocity[:10]
+            if item.commit_count > 0
         ]
         high_velocity_core = set(self.identify_high_velocity_core(velocity_30d, file_fraction=0.2, change_fraction=0.8))
         file_errors: list[dict[str, str]] = []
@@ -146,6 +154,9 @@ class SurveyorAgent:
             "top_pagerank_modules": top_pagerank_modules,
             "import_cycles": structured_cycles,
             "dead_code_candidates": dead_code_candidates,
+            "git_velocity_status_30d": velocity_snapshot_30d.history_status,
+            "git_velocity_note_30d": velocity_snapshot_30d.history_note,
+            "git_velocity_commit_events_30d": velocity_snapshot_30d.commit_events_scanned,
         }
 
         trace.append(
@@ -158,6 +169,8 @@ class SurveyorAgent:
                     "edges": kg.graph.number_of_edges(),
                     "high_velocity_core_count": len(high_velocity_core),
                     "top_high_velocity_files": top_high_velocity_files,
+                    "git_velocity_status_30d": velocity_snapshot_30d.history_status,
+                    "git_velocity_note_30d": velocity_snapshot_30d.history_note,
                     "top_pagerank_modules": top_pagerank_modules,
                     "import_cycle_count": len(scc_components),
                     "dead_code_candidate_count": len(dead_code_candidates),
@@ -180,39 +193,12 @@ class SurveyorAgent:
         return kg, modules, trace
 
     def extract_git_velocity(self, repo_path: Path, rel_path: str, days: int = 30) -> int:
-        since = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d")
-        cmd = [
-            "git",
-            "-C",
-            str(repo_path),
-            "log",
-            "--since",
-            since,
-            "--follow",
-            "--",
-            rel_path,
-        ]
-        try:
-            out = subprocess.run(cmd, capture_output=True, text=True, check=False)
-        except Exception:
-            return 0
-        if out.returncode != 0:
-            return 0
-        return len([line for line in out.stdout.splitlines() if line.startswith("commit ")])
+        velocity = self.velocity_map(repo_path, days=days)
+        return int(velocity.get(rel_path, 0))
 
     def velocity_map(self, repo_path: Path, days: int = 90) -> dict[str, int]:
-        since = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d")
-        cmd = ["git", "-C", str(repo_path), "log", "--since", since, "--name-only", "--pretty=format:"]
-        out = subprocess.run(cmd, capture_output=True, text=True, check=False)
-        if out.returncode != 0:
-            return {}
-        counts: dict[str, int] = {}
-        for line in out.stdout.splitlines():
-            rel = line.strip()
-            if not rel:
-                continue
-            counts[rel] = counts.get(rel, 0) + 1
-        return counts
+        snapshot = compute_git_velocity_snapshot(repo_path, days=days)
+        return {item.path: item.commit_count for item in snapshot.files}
 
     def identify_high_velocity_core(
         self, velocity_by_file: dict[str, int], file_fraction: float = 0.2, change_fraction: float = 0.8

@@ -256,6 +256,12 @@ class DayOneAnswer(BaseModel):
     question_id: str
     answer: str
     evidence: list[dict[str, Any]] = Field(default_factory=list)
+    confidence: Literal["low", "medium", "high"] = "medium"
+    confidence_label: Literal["low", "medium", "high"] = "medium"
+    confidence_score: float = Field(default=0.5, ge=0.0, le=1.0)
+    confidence_factors: dict[str, float] = Field(default_factory=dict)
+    confidence_components: dict[str, float] = Field(default_factory=dict)
+    confidence_reason: str = ""
 
 
 class TraceEvent(BaseModel):
