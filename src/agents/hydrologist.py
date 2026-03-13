@@ -123,7 +123,9 @@ class HydrologistAgent:
                         src,
                         tgt,
                         source_file=e.source_file,
+                        line_range=e.line_range,
                         analysis_method="yaml",
+                        transformation_type=e.transformation_type,
                     )
             except Exception as exc:
                 file_errors.append({"file": rel, "phase": "yaml", "error": str(exc)})
@@ -143,7 +145,9 @@ class HydrologistAgent:
                         src,
                         tgt,
                         source_file=e.source_file,
+                        line_range=e.line_range,
                         analysis_method="python_ast",
+                        transformation_type=e.transformation_type,
                     )
                 py_events = self.pyflow.extract_from_file(file, repo_path)
                 if py_events:

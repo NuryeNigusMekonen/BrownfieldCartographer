@@ -2,13 +2,17 @@ from __future__ import annotations
 
 import ast
 from dataclasses import dataclass
+import logging
 from pathlib import Path
+import re
 from typing import Iterable
 
 import sqlglot
 from sqlglot import expressions as exp
 from tree_sitter import Language, Parser
 import tree_sitter_python
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -56,6 +60,8 @@ class PythonDataFlowAnalyzer:
                     variables,
                     keyword_candidates=("filepath_or_buffer", "path_or_buf", "path"),
                 )
+                if unresolved:
+                    self._log_dynamic_reference(rel, line_range, fn_path)
                 out.append(
                     PythonDataFlowEvent(
                         source_file=rel,
@@ -76,6 +82,7 @@ class PythonDataFlowAnalyzer:
                     keyword_candidates=("sql", "sql_query", "query"),
                 )
                 if unresolved:
+                    self._log_dynamic_reference(rel, line_range, fn_path)
                     out.append(
                         PythonDataFlowEvent(
                             source_file=rel,
@@ -112,6 +119,7 @@ class PythonDataFlowAnalyzer:
                     keyword_candidates=("statement", "sql", "query", "clause"),
                 )
                 if unresolved:
+                    self._log_dynamic_reference(rel, line_range, fn_path)
                     out.append(
                         PythonDataFlowEvent(
                             source_file=rel,
@@ -126,7 +134,13 @@ class PythonDataFlowAnalyzer:
                     continue
                 tables = self._extract_sql_tables(sql_arg)
                 if not tables:
-                    tables = [sql_arg]
+                    # Ignore operational SQL commands that are not data lineage edges.
+                    if self._is_operational_sql(sql_arg):
+                        continue
+                    # Lightweight fallback when sqlglot cannot parse a valid statement.
+                    tables = self._extract_table_hints(sql_arg)
+                if not tables:
+                    continue
                 for table in tables:
                     out.append(
                         PythonDataFlowEvent(
@@ -141,6 +155,49 @@ class PythonDataFlowAnalyzer:
                     )
                 continue
 
+            # pandas DataFrame writes (df.to_csv/parquet/json/sql/excel/...)
+            if lower_fn.endswith(
+                (
+                    ".to_csv",
+                    ".to_parquet",
+                    ".to_json",
+                    ".to_excel",
+                    ".to_feather",
+                    ".to_orc",
+                    ".to_hdf",
+                    ".to_sql",
+                    ".to_gbq",
+                )
+            ):
+                if terminal in {"to_sql", "to_gbq"}:
+                    dataset, unresolved = self._resolve_argument(
+                        arguments,
+                        variables,
+                        keyword_candidates=("name", "table_name", "destination_table"),
+                    )
+                    storage_type = "table"
+                else:
+                    dataset, unresolved = self._resolve_argument(
+                        arguments,
+                        variables,
+                        keyword_candidates=("path_or_buf", "path", "excel_writer"),
+                    )
+                    storage_type = "file"
+                if unresolved:
+                    self._log_dynamic_reference(rel, line_range, fn_path)
+                out.append(
+                    PythonDataFlowEvent(
+                        source_file=rel,
+                        line_range=line_range,
+                        flow_type="PRODUCES",
+                        dataset=dataset,
+                        storage_type=storage_type,
+                        analysis_method="tree_sitter_python",
+                        unresolved=unresolved,
+                    )
+                )
+                continue
+
             # PySpark read chains (spark.read.csv/parquet/json/load/table/...)
             if ".read." in lower_fn or lower_fn.endswith(".read") or lower_fn.endswith(".table"):
                 dataset, unresolved = self._resolve_argument(
@@ -149,6 +206,8 @@ class PythonDataFlowAnalyzer:
                     keyword_candidates=("path", "table", "name"),
                 )
                 storage_type = "table" if terminal == "table" else "file"
+                if unresolved:
+                    self._log_dynamic_reference(rel, line_range, fn_path)
                 out.append(
                     PythonDataFlowEvent(
                         source_file=rel,
@@ -182,6 +241,8 @@ class PythonDataFlowAnalyzer:
                     keyword_candidates=("path", "table", "name"),
                 )
                 storage_type = "table" if terminal in {"saveastable", "insertinto"} else "file"
+                if unresolved:
+                    self._log_dynamic_reference(rel, line_range, fn_path)
                 out.append(
                     PythonDataFlowEvent(
                         source_file=rel,
@@ -195,6 +256,15 @@ class PythonDataFlowAnalyzer:
                 )
 
         return out
+
+    def _log_dynamic_reference(self, source_file: str, line_range: tuple[int, int], call_path: str) -> None:
+        logger.info(
+            "Dynamic reference, cannot resolve in %s:%s-%s for call %s",
+            source_file,
+            line_range[0],
+            line_range[1],
+            call_path,
+        )
 
     def _extract_string_variables(self, root: object) -> dict[str, tuple[str, bool]]:
         mapping: dict[str, tuple[str, bool]] = {}
@@ -307,6 +377,34 @@ class PythonDataFlowAnalyzer:
             if tables:
                 return sorted(tables)
         return []
+
+    def _is_operational_sql(self, sql_text: str) -> bool:
+        normalized = " ".join(sql_text.strip().lower().split())
+        if not normalized:
+            return True
+        operational_prefixes = (
+            "install ",
+            "load ",
+            "checkpoint",
+            "vacuum",
+            "analyze",
+            "pragma ",
+            "set ",
+            "use ",
+            "show ",
+            "describe ",
+            "explain ",
+            "call ",
+            "begin",
+            "commit",
+            "rollback",
+        )
+        return normalized.startswith(operational_prefixes)
+
+    def _extract_table_hints(self, sql_text: str) -> list[str]:
+        pattern = re.compile(r"\b(?:from|join|into|update|table)\s+([a-zA-Z_][\w\.\$]*)", flags=re.IGNORECASE)
+        tables = {match.group(1).strip() for match in pattern.finditer(sql_text)}
+        return sorted(table for table in tables if table)
 
     def _flatten_function_path(self, node: object) -> str:
         if node.type == "identifier":

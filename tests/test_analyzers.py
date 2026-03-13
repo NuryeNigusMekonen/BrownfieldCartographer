@@ -107,6 +107,29 @@ def test_python_dataflow_analyzer_extracts_io(mini_repo_copy: Path) -> None:
     assert ("PRODUCES", "data/orders_clean.csv", "file", False) in observed
 
 
+def test_python_dataflow_analyzer_detects_pandas_write_calls(mini_repo_copy: Path) -> None:
+    analyzer = PythonDataFlowAnalyzer()
+    io_file = mini_repo_copy / "pandas_write_job.py"
+    io_file.write_text(
+        "\n".join(
+            [
+                "import pandas as pd",
+                'OUTPUT_PATH = "data/orders_export.csv"',
+                'TABLE_NAME = "mart.orders_export"',
+                "df = pd.DataFrame({'x': [1]})",
+                "df.to_csv(OUTPUT_PATH)",
+                "df.to_sql(TABLE_NAME, con=engine)",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    events = analyzer.extract_from_file(io_file, mini_repo_copy)
+
+    observed = {(event.flow_type, event.dataset, event.storage_type, event.unresolved) for event in events}
+    assert ("PRODUCES", "data/orders_export.csv", "file", False) in observed
+    assert ("PRODUCES", "mart.orders_export", "table", False) in observed
+
+
 def test_sql_lineage_analyzer_extracts_cte_dependency(mini_repo_copy: Path) -> None:
     analyzer = SQLLineageAnalyzer()
     deps = analyzer.extract_from_file(mini_repo_copy / "model.sql", mini_repo_copy)
@@ -146,6 +169,52 @@ def test_python_dataflow_analyzer_handles_keyword_args_and_dynamic_refs(mini_rep
     assert ("CONSUMES", "silver_orders", "table", False) in observed
     assert ("PRODUCES", "silver_orders", "table", False) in observed
     assert ("CONSUMES", PythonDataFlowAnalyzer.DYNAMIC_REFERENCE, "file", True) in observed
+
+
+def test_python_dataflow_analyzer_logs_dynamic_references(caplog, mini_repo_copy: Path) -> None:
+    analyzer = PythonDataFlowAnalyzer()
+    io_file = mini_repo_copy / "dynamic_ref_job.py"
+    io_file.write_text(
+        "\n".join(
+            [
+                "import pandas as pd",
+                'suffix = "orders.csv"',
+                'pd.read_csv(filepath_or_buffer=f"data/{suffix}")',
+            ]
+        ),
+        encoding="utf-8",
+    )
+    with caplog.at_level("INFO", logger="src.analyzers.python_dataflow"):
+        events = analyzer.extract_from_file(io_file, mini_repo_copy)
+
+    assert any(event.unresolved for event in events)
+    assert any("Dynamic reference, cannot resolve" in record.message for record in caplog.records)
+
+
+def test_python_dataflow_analyzer_ignores_operational_sql_execute(mini_repo_copy: Path) -> None:
+    analyzer = PythonDataFlowAnalyzer()
+    io_file = mini_repo_copy / "duckdb_ops.py"
+    io_file.write_text(
+        "\n".join(
+            [
+                "def init(conn):",
+                '    conn.execute("INSTALL aws")',
+                '    conn.execute("LOAD aws")',
+                '    conn.execute("CHECKPOINT")',
+                '    conn.execute("CALL load_aws_credentials()")',
+                '    conn.execute("SELECT * FROM raw_orders")',
+            ]
+        ),
+        encoding="utf-8",
+    )
+    events = analyzer.extract_from_file(io_file, mini_repo_copy)
+    observed = {(event.flow_type, event.dataset, event.storage_type, event.unresolved) for event in events}
+
+    assert ("CONSUMES", "raw_orders", "table", False) in observed
+    assert all("install aws" not in event.dataset.lower() for event in events)
+    assert all("load aws" not in event.dataset.lower() for event in events)
+    assert all("checkpoint" not in event.dataset.lower() for event in events)
+    assert all("load_aws_credentials" not in event.dataset.lower() for event in events)
 
 
 def test_sql_lineage_analyzer_ignores_unused_ctes_and_falls_back_for_dbt_refs(mini_repo_copy: Path) -> None:
@@ -285,6 +354,22 @@ def test_dag_config_analyzer_extracts_yaml_and_airflow_edges(mini_repo_copy: Pat
     assert ("orders_raw", "model") in yaml_pairs
     assert ("extract", "transform") in yaml_pairs
     assert ("extract_task", "transform_task") in py_pairs
+
+
+def test_dag_config_analyzer_attaches_lineage_metadata(mini_repo_copy: Path) -> None:
+    analyzer = DAGConfigAnalyzer()
+    yaml_edges = analyzer.parse(mini_repo_copy / "schema.yml", mini_repo_copy)
+    py_edges = analyzer.parse_airflow_python(mini_repo_copy / "dag.py", mini_repo_copy)
+
+    assert yaml_edges
+    assert all(edge.transformation_type for edge in yaml_edges)
+    assert all(isinstance(edge.line_range, tuple) and len(edge.line_range) == 2 for edge in yaml_edges)
+    assert any(edge.line_range[0] >= 1 for edge in yaml_edges)
+
+    assert py_edges
+    assert all(edge.transformation_type == "airflow_task_dependency" for edge in py_edges)
+    assert all(edge.line_range[0] >= 1 for edge in py_edges)
+    assert all(edge.line_range[1] >= edge.line_range[0] for edge in py_edges)
 
 
 def test_dag_config_analyzer_handles_airflow_list_dependencies(mini_repo_copy: Path) -> None:

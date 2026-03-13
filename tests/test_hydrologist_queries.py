@@ -94,3 +94,13 @@ def test_hydrologist_assigns_domain_specific_transformation_types(mini_repo_copy
 
     assert any(t.startswith("sql_") for t in transformation_types)
     assert any(t.startswith("python_") for t in transformation_types)
+
+
+def test_hydrologist_edges_carry_required_lineage_metadata(mini_repo_copy: Path) -> None:
+    graph, _ = HydrologistAgent().run(mini_repo_copy)
+
+    assert graph.graph.number_of_edges() > 0
+    for _, _, attrs in graph.graph.edges(data=True):
+        assert "source_file" in attrs
+        assert "line_range" in attrs
+        assert "transformation_type" in attrs
