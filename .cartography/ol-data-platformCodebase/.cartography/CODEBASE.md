@@ -1,0 +1,280 @@
+# CODEBASE
+
+## Architecture Overview
+This repository is a SQL-heavy transformation project where source datasets flow through staged models into reporting outputs. The current analysis mapped 1109 modules with most activity concentrated in src/ol_superset/assets/charts, src/ol_superset/assets/datasets/Trino and identified 357 source-side entities and 223 sink-side entities. Critical execution path starts with src/ol_orchestrate/__init__.py, dg_projects/data_loading/data_loading/defs/edxorg_s3_ingest/loads.py.
+
+## Critical Path
+- src/ol_orchestrate/__init__.py
+- dg_projects/data_loading/data_loading/defs/edxorg_s3_ingest/loads.py
+- dg_projects/data_loading/data_loading/defs/edxorg_s3_ingest/dagster_assets.py
+- docker-compose.yaml
+- build.yaml
+
+## Data Sources
+- _glue_source_registry
+- columns
+- legacy_edx_certificate_revision_mapping
+- ol_warehouse_production_dimensional.afact_course_page_engagement
+- ol_warehouse_production_dimensional.afact_discussion_engagement
+- ol_warehouse_production_dimensional.afact_problem_engagement
+- ol_warehouse_production_dimensional.dim_course_content
+- ol_warehouse_production_dimensional.dim_discussion_topic
+- ol_warehouse_production_dimensional.dim_problem
+- ol_warehouse_production_dimensional.dim_user
+- ol_warehouse_production_dimensional.dim_video
+- ol_warehouse_production_dimensional.tfact_problem_events
+- ol_warehouse_production_dimensional.tfact_video_events
+- ol_warehouse_production_intermediate.int__combined__course_runs
+- ol_warehouse_raw_data.raw__bootcamps__app__postgres__applications_applicationstep
+- ol_warehouse_raw_data.raw__bootcamps__app__postgres__applications_applicationstepsubmission
+- ol_warehouse_raw_data.raw__bootcamps__app__postgres__applications_bootcampapplication
+- ol_warehouse_raw_data.raw__bootcamps__app__postgres__applications_bootcamprunapplicationstep
+- ol_warehouse_raw_data.raw__bootcamps__app__postgres__auth_user
+- ol_warehouse_raw_data.raw__bootcamps__app__postgres__django_content_type
+
+## Data Sinks
+- Enrollment_Activity_Counts_Dataset
+- afact_discussion_engagement
+- afact_video_engagement
+- chatbot_usage_report
+- combined_enrollments_with_gender_and_date
+- combined_video_engagements_counts_report
+- duckdb_glue_integration
+- edxorg_to_mitxonline_course_runs
+- edxorg_to_mitxonline_enrollments
+- edxorg_to_mitxonline_program_entitlements
+- edxorg_to_mitxonline_users
+- engagement_problem_completion_raw
+- engagement_problem_completion_summary
+- enrollment_detail_report
+- generate_model_yaml_enhanced
+- instructor_module_report
+- int__bootcamps__applications
+- int__bootcamps__ecommerce_wiretransferreceipt
+- int__edxorg__mitx_user_courseactivities
+- int__mitx__program_certificates
+
+## Known Debt
+- Documentation drift: dg_projects/legacy_openedx/legacy_openedx/definitions.py
+- Documentation drift: packages/ol-orchestrate-lib/src/ol_orchestrate/resources/postgres_db.py
+- Documentation drift: packages/ol-orchestrate-lib/src/ol_orchestrate/resources/athena_db.py
+- Documentation drift: packages/ol-orchestrate-lib/src/ol_orchestrate/lib/postgres/event_log.py
+- Documentation drift: packages/ol-orchestrate-lib/src/ol_orchestrate/lib/postgres/run_storage.py
+- Documentation drift: packages/ol-orchestrate-lib/src/ol_orchestrate/lib/postgres/schedule_storage.py
+
+## Raw Git High-Velocity Files
+Raw git history shows the most frequently modified files, while onboarding-relevant velocity highlights the fast-changing runtime areas most important for a new engineer.
+- Git history status: shallow (Velocity is based on shallow clone history.)
+- Time window: 90 days
+- dg_deployments/Dockerfile.dagster-k8s (analysis_method=git_log_frequency, commit_count=3, time_window_days=90, last_commit_timestamp=2026-03-11T10:36:38-04:00)
+- dg_deployments/reconcile_edxorg_partitions.py (analysis_method=git_log_frequency, commit_count=3, time_window_days=90, last_commit_timestamp=2026-03-11T10:36:38-04:00)
+- pyproject.toml (analysis_method=git_log_frequency, commit_count=2, time_window_days=90, last_commit_timestamp=2026-03-11T13:17:41-04:00)
+- src/ol_dbt/models/intermediate/mitxonline/_int_mitxonline__models.yml (analysis_method=git_log_frequency, commit_count=2, time_window_days=90, last_commit_timestamp=2026-03-11T14:05:42-04:00)
+- src/ol_dbt/models/intermediate/mitxonline/int__mitxonline__ecommerce_order.sql (analysis_method=git_log_frequency, commit_count=2, time_window_days=90, last_commit_timestamp=2026-03-11T14:05:42-04:00)
+- src/ol_dbt/models/intermediate/mitxonline/int__mitxonline__ecommerce_product.sql (analysis_method=git_log_frequency, commit_count=2, time_window_days=90, last_commit_timestamp=2026-03-11T14:05:42-04:00)
+- src/ol_dbt/models/migration/_migration__models.yml (analysis_method=git_log_frequency, commit_count=2, time_window_days=90, last_commit_timestamp=2026-03-11T11:31:55-04:00)
+- src/ol_superset/assets/charts/Learner_Page_Engagement_9bd2269c-fd5c-463d-b63e-14fa63e90a55.yaml (analysis_method=git_log_frequency, commit_count=2, time_window_days=90, last_commit_timestamp=2026-03-11T11:24:43-04:00)
+- src/ol_superset/assets/charts/Learner_Problem_Engagement_695dd2d8-48d5-436b-a646-204bdf5f2be5.yaml (analysis_method=git_log_frequency, commit_count=2, time_window_days=90, last_commit_timestamp=2026-03-11T11:24:43-04:00)
+- uv.lock (analysis_method=git_log_frequency, commit_count=2, time_window_days=90, last_commit_timestamp=2026-03-11T13:17:41-04:00)
+
+## Module Purpose Index
+- docker-compose.yaml: This module primarily handles SQL transformation or query logic, pipeline orchestration, 57 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- build.yaml: This module primarily handles 1 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .pre-commit-config.yaml: This module primarily handles SQL transformation or query logic, 10 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- .gemini/config.yaml: This module primarily handles 8 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_deployments/reconcile_edxorg_partitions.py: This module primarily handles SQL transformation or query logic, pipeline orchestration, 9 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- bin/dbt-create-staging-models.py: This module primarily handles SQL transformation or query logic, 7 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- bin/dbt-local-dev.py: This module primarily handles SQL transformation or query logic, 17 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- bin/uv-operations.py: This module primarily handles 7 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/build.yaml: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/student_risk_probability/build.yaml: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/student_risk_probability/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/build.yaml: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/build.yaml: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_platform/build.yaml: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_loading/build.yaml: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/b2b_organization/build.yaml: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/b2b_organization/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/build.yaml: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/canvas/build.yaml: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/build.yaml: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/definitions.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources_tests/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/lib/contants.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/lib/video_processing.py: This module primarily handles pipeline orchestration, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/lib/google_sheets.py: This module primarily handles pipeline orchestration, 6 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/lib/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/assets/open_learning_library.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/assets/sloan_api.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/assets/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/assets/video_shorts.py: This module primarily handles pipeline orchestration, 6 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/resources/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/defs/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/sensors/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/learning_resources/learning_resources/sensors/video_shorts.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/student_risk_probability/student_risk_probability/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/student_risk_probability/student_risk_probability/definitions.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/student_risk_probability/student_risk_probability/lib/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/student_risk_probability/student_risk_probability/lib/helper.py: This module primarily handles 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/student_risk_probability/student_risk_probability/assets/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/student_risk_probability/student_risk_probability/assets/risk_probability.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/student_risk_probability/student_risk_probability/resources/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx_tests/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/definitions.py: This module primarily handles SQL transformation or query logic, pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces. [Documentation Drift Suspected]
+- dg_projects/legacy_openedx/legacy_openedx/lib/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/repositories/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/ops/open_edx.py: This module primarily handles SQL transformation or query logic, pipeline orchestration, 11 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/ops/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/resources/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/resources/healthchecks.py: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/resources/sqlite_db.py: This module primarily handles SQL transformation or query logic, pipeline orchestration, 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/resources/mysql_db.py: This module primarily handles SQL transformation or query logic, pipeline orchestration, 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/schedules/open_edx.py: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/schedules/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/jobs/open_edx.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/jobs/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/legacy_openedx/legacy_openedx/sensors/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/definitions.py: This module primarily handles pipeline orchestration, 4 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx_tests/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/lib/magic_numbers.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/lib/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/lib/assets_helper.py: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/components/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/components/openedx_deployment.py: This module primarily handles pipeline orchestration, 5 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/ops/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/ops/normalize_logs.py: This module primarily handles pipeline orchestration, 4 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/assets/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/assets/openedx.py: This module primarily handles pipeline orchestration, 5 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/schedules/open_edx.py: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/schedules/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/jobs/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/jobs/normalize_logs.py: This module primarily handles pipeline orchestration, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/partitions/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/partitions/openedx.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/sensors/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/openedx/openedx/sensors/openedx.py: This module primarily handles pipeline orchestration, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_platform/data_platform/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_platform/data_platform/definitions.py: This module primarily handles pipeline orchestration, 4 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_platform/orchestration_platform_tests/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_platform/data_platform/lib/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_platform/data_platform/assets/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_platform/data_platform/defs/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_platform/data_platform/assets/metadata/databases.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_platform/data_platform/assets/metadata/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_loading/data_loading_tests/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_loading/data_loading/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_loading/data_loading/definitions.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_loading/data_loading/components/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_loading/data_loading/defs/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_loading/data_loading/defs/edxorg_s3_ingest/dagster_assets.py: This module primarily handles pipeline orchestration, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_loading/data_loading/defs/edxorg_s3_ingest/loads.py: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_loading/data_loading/defs/edxorg_s3_ingest/defs.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/data_loading/data_loading/defs/edxorg_s3_ingest/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/b2b_organization/b2b_organization/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/b2b_organization/b2b_organization/definitions.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/b2b_organization/b2b_organization_tests/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/b2b_organization/b2b_organization/assets/data_export.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/b2b_organization/b2b_organization/assets/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/b2b_organization/b2b_organization/defs/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/b2b_organization/b2b_organization/partitions/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/b2b_organization/b2b_organization/partitions/b2b_organization.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/b2b_organization/b2b_organization/sensors/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/b2b_organization/b2b_organization/sensors/b2b_organization.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/definitions.py: This module primarily handles pipeline orchestration, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg_tests/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg_tests/test_edxorg_lib.py: This module primarily handles SQL transformation or query logic, 13 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/lib/edxorg.py: This module primarily handles SQL transformation or query logic, 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/lib/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/io_managers/gcs.py: This module primarily handles pipeline orchestration, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/io_managers/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/ops/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/ops/edx_gcs_courses.py: This module primarily handles pipeline orchestration, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/ops/object_storage.py: This module primarily handles pipeline orchestration, 5 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/assets/edxorg_db_table_specs.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/assets/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/assets/openedx_course_archives.py: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/assets/edxorg_api.py: This module primarily handles pipeline orchestration, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/assets/edxorg_archive.py: This module primarily handles SQL transformation or query logic, pipeline orchestration, 8 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/defs/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/jobs/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/jobs/edx_gcs_courses.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/jobs/retrieve_edx_exports.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/edxorg/edxorg/sensors/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/canvas/canvas_tests/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/canvas/canvas/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/canvas/canvas/definitions.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/canvas/canvas/lib/canvas.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/canvas/canvas/lib/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/canvas/canvas/assets/canvas.py: This module primarily handles pipeline orchestration, 4 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/canvas/canvas/assets/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/canvas/canvas/resources/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/canvas/canvas/resources/api_client_factory.py: This module primarily handles pipeline orchestration, 4 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/canvas/canvas/defs/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/canvas/canvas/sensors/canvas.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/canvas/canvas/sensors/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/lakehouse/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/lakehouse/definitions.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/lakehouse_tests/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/lakehouse/lib/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/lakehouse/assets/superset.py: This module primarily handles pipeline orchestration, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/lakehouse/assets/instructor_onboarding.py: This module primarily handles pipeline orchestration, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/lakehouse/assets/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/lakehouse/resources/superset_api.py: This module primarily handles pipeline orchestration, 10 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/lakehouse/resources/airbyte.py: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/lakehouse/resources/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/lakehouse/defs/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/lakehouse/assets/lakehouse/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- dg_projects/lakehouse/lakehouse/assets/lakehouse/dbt.py: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- .github/workflows/project_automation.yaml: This module primarily handles 12 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/workflows/publish_dbt_docs.yaml: This module primarily handles 22 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_deployments/local/dagster.yaml: This module primarily handles pipeline orchestration, 16 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- dg_deployments/local/workspace.yaml: This module primarily handles pipeline orchestration, 5 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/__init__.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/automation_policies.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/hooks.py: This module primarily handles pipeline orchestration, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/glue_helper.py: This module primarily handles 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/utils.py: This module primarily handles pipeline orchestration, 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/arrow_helper.py: This module primarily handles 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/file_rendering.py: This module primarily handles 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/constants.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/openedx.py: This module primarily handles 9 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/dagster_helpers.py: This module primarily handles pipeline orchestration, 4 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/yaml_config_helper.py: This module primarily handles 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/io_managers/filepath.py: This module primarily handles pipeline orchestration, 7 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/io_managers/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/ops/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/assets/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/postgres_db.py: This module primarily handles SQL transformation or query logic, pipeline orchestration, data processing, 4 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces. [Documentation Drift Suspected]
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/github.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/bigquery_db.py: This module primarily handles pipeline orchestration, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/athena_db.py: This module primarily handles SQL transformation or query logic, pipeline orchestration, 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces. [Documentation Drift Suspected]
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/openedx.py: This module primarily handles pipeline orchestration, 11 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/api_client_factory.py: This module primarily handles pipeline orchestration, 4 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/outputs.py: This module primarily handles pipeline orchestration, 9 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/gcp_gcs.py: This module primarily handles pipeline orchestration, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/oauth.py: This module primarily handles pipeline orchestration, 8 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/learn_api.py: This module primarily handles 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/api_client.py: This module primarily handles pipeline orchestration, 4 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/canvas_api.py: This module primarily handles 9 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/schedules/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/jobs/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/partitions/edxorg.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/partitions/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/sensors/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/sensors/object_storage.py: This module primarily handles pipeline orchestration, 4 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/postgres/__init__.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/postgres/event_log.py: This module primarily handles SQL transformation or query logic, pipeline orchestration, 6 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces. [Documentation Drift Suspected]
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/postgres/run_storage.py: This module primarily handles SQL transformation or query logic, pipeline orchestration, 6 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces. [Documentation Drift Suspected]
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/postgres/schedule_storage.py: This module primarily handles SQL transformation or query logic, pipeline orchestration, 6 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces. [Documentation Drift Suspected]
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/dagster_types/files.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/dagster_types/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/lib/dagster_types/google.py: This module primarily handles pipeline orchestration. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/secrets/vault.py: This module primarily handles pipeline orchestration, 14 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- packages/ol-orchestrate-lib/src/ol_orchestrate/resources/secrets/__init__.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.

@@ -1,0 +1,256 @@
+# CODEBASE
+
+## Architecture Overview
+This repository is a Python-heavy orchestration platform where runtime modules coordinate ingestion, execution, and stateful pipeline operations. The current analysis mapped 469 modules with most activity concentrated in src/meltano/core, tests/meltano/core and identified 3 source-side entities and 29 sink-side entities. Critical execution path starts with src/meltano/core/project.py, src/meltano/core/error.py.
+
+## Critical Path
+- src/meltano/core/project.py
+- src/meltano/core/error.py
+- src/meltano/core/utils/__init__.py
+- src/meltano/core/plugin/base.py
+- src/meltano/core/behavior/canonical.py
+
+## Data Sources
+- embed_tokens
+- job
+- test
+
+## Data Sinks
+- src/meltano/cli/config.py (transformation)
+- src/meltano/cli/state.py (transformation)
+- src/meltano/core/block/extract_load.py (transformation)
+- src/meltano/core/db.py (transformation)
+- src/meltano/core/error.py (transformation)
+- src/meltano/core/logging/job_logging_service.py (transformation)
+- src/meltano/core/logging/utils.py (transformation)
+- src/meltano/core/plugin/singer/catalog.py (transformation)
+- src/meltano/core/plugin/singer/tap.py (transformation)
+- src/meltano/core/state_store/base.py (transformation)
+- src/meltano/core/state_store/db.py (transformation)
+- src/meltano/core/state_store/filesystem.py (transformation)
+- src/meltano/core/utils/pidfile.py (transformation)
+- src/meltano/core/venv_service.py (transformation)
+- src/meltano/core/yaml.py (transformation)
+- src/meltano/migrations/versions/23ea52e6d784_add_resource_type_to_embed_token.py (transformation)
+- src/meltano/migrations/versions/53e97221d99f_add_run_id_to_job.py (transformation)
+- src/meltano/migrations/versions/6828cc5b1a4f_create_dedicated_state_table.py (transformation)
+- src/meltano/migrations/versions/990c0665f3ce_ensure_user_login_count_default_value.py (transformation)
+- tests/fixtures/db/mssql.py (transformation)
+
+## Known Debt
+- Circular dependency: src/meltano/cli/__init__.py, src/meltano/cli/add.py, src/meltano/cli/cli.py, src/meltano/cli/compile.py, src/meltano/cli/config.py, src/meltano/cli/docs.py, src/meltano/cli/elt.py, src/meltano/cli/environment.py, src/meltano/cli/hub.py, src/meltano/cli/initialize.py, src/meltano/cli/install.py, src/meltano/cli/interactive/__init__.py, src/meltano/cli/interactive/config.py, src/meltano/cli/invoke.py, src/meltano/cli/job.py, src/meltano/cli/lock.py, src/meltano/cli/logs.py, src/meltano/cli/params.py, src/meltano/cli/remove.py, src/meltano/cli/run.py, src/meltano/cli/schedule.py, src/meltano/cli/schema.py, src/meltano/cli/select_entities.py, src/meltano/cli/state.py, src/meltano/cli/upgrade.py, src/meltano/cli/utils.py, src/meltano/cli/validate.py, src/meltano/core/block/block_parser.py, src/meltano/core/block/blockset.py, src/meltano/core/block/extract_load.py, src/meltano/core/block/future_utils.py, src/meltano/core/block/ioblock.py, src/meltano/core/block/plugin_command.py, src/meltano/core/block/singer.py, src/meltano/core/config_service.py, src/meltano/core/container/container_service.py, src/meltano/core/container/container_spec.py, src/meltano/core/db.py, src/meltano/core/elt_context.py, src/meltano/core/environment.py, src/meltano/core/environment_service.py, src/meltano/core/error.py, src/meltano/core/hub/__init__.py, src/meltano/core/hub/client.py, src/meltano/core/job/__init__.py, src/meltano/core/job/finder.py, src/meltano/core/job/job.py, src/meltano/core/job/stale_job_failer.py, src/meltano/core/job_state.py, src/meltano/core/locked_definition_service.py, src/meltano/core/logging/__init__.py, src/meltano/core/logging/formatters.py, src/meltano/core/logging/job_logging_service.py, src/meltano/core/logging/output_logger.py, src/meltano/core/logging/renderers.py, src/meltano/core/logging/utils.py, src/meltano/core/manifest/__init__.py, src/meltano/core/manifest/manifest.py, src/meltano/core/meltano_file.py, src/meltano/core/meltano_invoker.py, src/meltano/core/migration_service.py, src/meltano/core/plugin/__init__.py, src/meltano/core/plugin/base.py, src/meltano/core/plugin/command.py, src/meltano/core/plugin/config_service.py, src/meltano/core/plugin/error.py, src/meltano/core/plugin/file.py, src/meltano/core/plugin/meltano_file.py, src/meltano/core/plugin/project_plugin.py, src/meltano/core/plugin/settings_service.py, src/meltano/core/plugin_install_service.py, src/meltano/core/plugin_invoker.py, src/meltano/core/plugin_location_remove.py, src/meltano/core/plugin_lock_service.py, src/meltano/core/plugin_remove_service.py, src/meltano/core/plugin_repository.py, src/meltano/core/plugin_test_service.py, src/meltano/core/project.py, src/meltano/core/project_add_service.py, src/meltano/core/project_dirs_service.py, src/meltano/core/project_files.py, src/meltano/core/project_init_service.py, src/meltano/core/project_plugins_service.py, src/meltano/core/project_settings_service.py, src/meltano/core/runner/dbt.py, src/meltano/core/runner/singer.py, src/meltano/core/schedule.py, src/meltano/core/schedule_service.py, src/meltano/core/select_service.py, src/meltano/core/setting.py, src/meltano/core/setting_definition.py, src/meltano/core/settings_service.py, src/meltano/core/settings_store.py, src/meltano/core/sqlalchemy.py, src/meltano/core/state_service.py, src/meltano/core/state_store/__init__.py, src/meltano/core/state_store/base.py, src/meltano/core/state_store/db.py, src/meltano/core/task_sets_service.py, src/meltano/core/tracking/__init__.py, src/meltano/core/tracking/contexts/__init__.py, src/meltano/core/tracking/contexts/base.py, src/meltano/core/tracking/contexts/cli.py, src/meltano/core/tracking/contexts/environment.py, src/meltano/core/tracking/contexts/exception.py, src/meltano/core/tracking/contexts/plugins.py, src/meltano/core/tracking/contexts/project.py, src/meltano/core/tracking/tracker.py, src/meltano/core/upgrade_service.py, src/meltano/core/user_config.py, src/meltano/core/utils/__init__.py, src/meltano/core/utils/python_compatibility.py, src/meltano/core/validation_service.py, src/meltano/core/venv_service.py, src/meltano/core/version_check.py, src/meltano/core/yaml.py, src/meltano/migrations/__init__.py
+- Documentation drift: src/meltano/core/plugin/airflow.py
+
+## High-Velocity Files
+- .grype.yaml (1 commits/30d)
+- noxfile.py (1 commits/30d)
+- codecov.yml (1 commits/30d)
+- .pre-commit-config.yaml (1 commits/30d)
+- .github/dependabot.yml (1 commits/30d)
+- .github/stale.yml (1 commits/30d)
+- .github/semantic.yml (1 commits/30d)
+- scripts/generate_docker_tags.py (1 commits/30d)
+- scripts/alembic_freeze.py (1 commits/30d)
+- integration/logging.yaml (1 commits/30d)
+
+## Module Purpose Index
+- .grype.yaml: This module primarily handles 4 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- noxfile.py: This module primarily handles SQL transformation or query logic, 7 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- codecov.yml: This module primarily handles 11 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .pre-commit-config.yaml: This module primarily handles 15 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/dependabot.yml: This module primarily handles 26 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/stale.yml: This module primarily handles 2 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/semantic.yml: This module primarily handles 4 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- scripts/generate_docker_tags.py: This module primarily handles 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- scripts/alembic_freeze.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- integration/logging.yaml: This module primarily handles 23 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- docs/docusaurus.config.js: This module primarily handles general application or utility logic. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/sidebars.js: This module primarily handles general application or utility logic. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/tailwind.config.js: This module primarily handles general application or utility logic. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/postcss.config.js: This module primarily handles general application or utility logic. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/babel.config.js: This module primarily handles general application or utility logic. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- tests/test_meta.py: This module primarily handles 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/asserts.py: This module primarily handles 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/conftest.py: This module primarily handles SQL transformation or query logic, 9 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- .github/workflows/codeql-analysis.yml: This module primarily handles 27 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/workflows/test.yml: This module primarily handles SQL transformation or query logic, 64 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/workflows/lint_snowplow_schemas.yml: This module primarily handles 20 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/workflows/dependency-review.yml: This module primarily handles 21 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/workflows/build.yml: This module primarily handles 58 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/workflows/version_bump.yml: This module primarily handles 49 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/workflows/integration_tests.yml: This module primarily handles 31 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/workflows/run-zizmor.yml: This module primarily handles 22 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/workflows/benchmark.yml: This module primarily handles 29 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/ISSUE_TEMPLATE/config.yml: This module primarily handles 5 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/ISSUE_TEMPLATE/feature.yml: This module primarily handles 13 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/ISSUE_TEMPLATE/bug.yml: This module primarily handles 16 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/DISCUSSION_TEMPLATE/meltano-office-hours.yml: This module primarily handles 9 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/workflows/resources/docker-compose.postgres.yaml: This module primarily handles SQL transformation or query logic, 12 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/workflows/resources/docker-compose.mssql.yaml: This module primarily handles SQL transformation or query logic, 11 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/actions/igluctl-lint/action.yml: This module primarily handles 10 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- .github/actions/docker-build-scan-push/action.yml: This module primarily handles 40 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-run-merge-states/meltano.yml: This module primarily handles 18 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-run-merge-states/ending-meltano.yml: This module primarily handles 18 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-run-merge-states/tap.py: This module primarily handles 5 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-annotations/meltano.yml: This module primarily handles 35 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-annotations/ending-meltano.yml: This module primarily handles 36 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-config/meltano.yml: This module primarily handles 6 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-config/ending-meltano.yml: This module primarily handles 18 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-custom-python/meltano.yml: This module primarily handles 7 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-custom-python/ending-meltano.yml: This module primarily handles 11 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-env-precedence/meltano.yml: This module primarily handles 20 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-env-precedence/ending-meltano.yml: This module primarily handles 20 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-state-s3/meltano.yml: This module primarily handles 14 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-state-s3/ending-meltano.yml: This module primarily handles 16 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-manifest/meltano.yml: This module primarily handles pipeline orchestration, 16 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-manifest/orchestrators.meltano.yml: This module primarily handles pipeline orchestration, 14 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-manifest/ending-meltano.yml: This module primarily handles pipeline orchestration, 16 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-manifest/extractors.meltano.yml: This module primarily handles 36 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-manifest/loaders.meltano.yml: This module primarily handles pipeline orchestration, 28 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-manifest/transformers.meltano.yml: This module primarily handles 39 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-manifest/utilities.meltano.yml: This module primarily handles SQL transformation or query logic, 26 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-manifest/mappers.meltano.yml: This module primarily handles 14 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-state-local/meltano.yml: This module primarily handles 14 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-state-local/ending-meltano.yml: This module primarily handles 16 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-expand-envvars-in-array/meltano.yml: This module primarily handles 22 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-expand-envvars-in-array/ending-meltano.yml: This module primarily handles 22 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-objects/meltano.yml: This module primarily handles 6 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-objects/ending-meltano.yml: This module primarily handles 15 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-run/meltano.yml: This module primarily handles 23 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-run/ending-meltano.yml: This module primarily handles 30 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-basics/meltano.yml: This module primarily handles 14 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-basics/ending-meltano.yml: This module primarily handles 16 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-migrations/meltano.yml: This module primarily handles SQL transformation or query logic, 15 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-migrations/ending-meltano.yml: This module primarily handles SQL transformation or query logic, 15 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-env-precedence/env-var-in-pip-url-example-124/example.py: This module primarily handles 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-manifest/environments/userdev.meltano.yml: This module primarily handles SQL transformation or query logic, pipeline orchestration, 43 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-manifest/environments/jigsaw.meltano.yml: This module primarily handles SQL transformation or query logic, pipeline orchestration, 31 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-manifest/environments/cicd.meltano.yml: This module primarily handles SQL transformation or query logic, pipeline orchestration, 41 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-manifest/environments/prod.meltano.yml: This module primarily handles SQL transformation or query logic, 32 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- integration/example-library/meltano-manifest/environments/staging.meltano.yml: This module primarily handles SQL transformation or query logic, 30 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- docs/src/components/SidebarArrow.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/NotFound.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/pages/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/utils/Termynal.js: This module primarily handles 13 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/utils/Termy.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/components/homepage/Engineers.js: This module primarily handles general application or utility logic. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/components/homepage/Features.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/components/homepage/FindOutMore.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/TOC/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocSidebar/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/NavbarItem/DocsVersionDropdownNavbarItem.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/NavbarItem/DropdownNavbarItem.js: This module primarily handles 5 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogPostItem/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/EditThisPage/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocSidebarItems/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/SearchBar/index.js: This module primarily handles 6 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogPostPage/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/AnnouncementBar/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/TOCCollapsible/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Navbar/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Footer/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/CodeBlock/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogSidebar/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogLayout/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/ColorModeToggle/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocBreadcrumbs/index.js: This module primarily handles 3 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Admonition/index.js: This module primarily handles 9 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocSidebar/Desktop/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocSidebar/Mobile/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocSidebar/Desktop/Content/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogPostItem/Content/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogPostItem/Header/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogPostItem/Footer/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogPostItem/Container/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogPostItem/Header/Authors/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogPostItem/Header/Title/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogPostItem/Header/Author/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogPostItem/Footer/ReadMoreLink/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocItem/Layout/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocItem/Footer/index.js: This module primarily handles 3 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocItem/TOC/Desktop/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogPostPage/Metadata/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/AnnouncementBar/Content/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/AnnouncementBar/CloseButton/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/TOCCollapsible/CollapseButton/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Navbar/Search/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Navbar/Layout/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Navbar/Content/index.js: This module primarily handles 4 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Navbar/Logo/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Navbar/ColorModeToggle/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Navbar/MobileSidebar/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Navbar/MobileSidebar/PrimaryMenu/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Navbar/MobileSidebar/Toggle/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Navbar/MobileSidebar/Layout/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Navbar/MobileSidebar/Header/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Navbar/MobileSidebar/SecondaryMenu/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Footer/Layout/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Footer/Copyright/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Footer/Logo/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Footer/Links/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Footer/LinkItem/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Footer/Links/Simple/index.js: This module primarily handles 3 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Footer/Links/MultiColumn/index.js: This module primarily handles 3 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/CodeBlock/WordWrapButton/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/CodeBlock/Content/String.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/CodeBlock/Content/Element.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/CodeBlock/Line/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/CodeBlock/CopyButton/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/CodeBlock/Container/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogSidebar/Desktop/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/BlogSidebar/Mobile/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocBreadcrumbs/Items/Home/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/Icon/Close/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocSidebarItem/Category/index.js: This module primarily handles 4 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocPage/Layout/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocPage/Layout/Main/index.js: This module primarily handles 1 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- docs/src/theme/DocPage/Layout/Sidebar/index.js: This module primarily handles 2 public entry points. It appears in the javascript layer and exposes key behaviors through code-defined interfaces.
+- tests/benchmarks/test_state_backend_benchmarks.py: This module primarily handles 5 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/benchmarks/test_tap_benchmarks.py: This module primarily handles 12 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/utils.py: This module primarily handles 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/cli.py: This module primarily handles 5 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/fs.py: This module primarily handles 4 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/custom_addon.py: This module primarily handles general application or utility logic. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/state_backends.py: This module primarily handles 6 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/core.py: This module primarily handles SQL transformation or query logic, pipeline orchestration, 43 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/docker/__init__.py: This module primarily handles 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/docker/snowplow.py: This module primarily handles 10 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/docker/docker-compose.yml: This module primarily handles 7 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/large_config_project/meltano.yml: This module primarily handles 13 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/large_config_project/schedule.yml: This module primarily handles 16 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/db/sqlite.py: This module primarily handles SQL transformation or query logic, 1 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/db/mssql.py: This module primarily handles SQL transformation or query logic, 4 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/db/postgresql_psycopg2.py: This module primarily handles SQL transformation or query logic, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/db/__init__.py: This module primarily handles SQL transformation or query logic, 6 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/db/postgresql.py: This module primarily handles SQL transformation or query logic, 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/multifile_project/meltano.yml: This module primarily handles SQL transformation or query logic, 23 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/multifile_project/subconfig_2.yml: This module primarily handles 13 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/multifile_project/subfolder/subconfig_1.yml: This module primarily handles 13 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/plugins/extractors/tap-custom/test.yml: This module primarily handles 16 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- tests/fixtures/plugins/extractors/tap-custom/has_python.yml: This module primarily handles 17 public entry points. It appears in the yaml layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_didyoumean.py: This module primarily handles 5 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_elt.py: This module primarily handles SQL transformation or query logic, 35 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_upgrade.py: This module primarily handles pipeline orchestration, 7 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_invoke.py: This module primarily handles 20 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_state.py: This module primarily handles 41 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_hub.py: This module primarily handles 2 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_job_cmd.py: This module primarily handles 5 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_logs.py: This module primarily handles SQL transformation or query logic, 15 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_lock.py: This module primarily handles 5 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_schedule.py: This module primarily handles 6 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_select.py: This module primarily handles 7 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_remove.py: This module primarily handles 6 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_config.py: This module primarily handles 23 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_add.py: This module primarily handles SQL transformation or query logic, pipeline orchestration, 28 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_run.py: This module primarily handles SQL transformation or query logic, 40 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_initialize.py: This module primarily handles 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_environment.py: This module primarily handles 3 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_cli.py: This module primarily handles 34 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_install.py: This module primarily handles 11 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/cli/test_compile.py: This module primarily handles 14 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/core/test_task_sets_service.py: This module primarily handles 9 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/core/test_plugin_lock_service.py: This module primarily handles 5 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/core/test_project_add_service.py: This module primarily handles 8 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/core/test_environment_service.py: This module primarily handles 6 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/core/test_locked_definition_service.py: This module primarily handles 4 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.
+- tests/meltano/core/test_version_check.py: This module primarily handles 15 public entry points. It appears in the python layer and exposes key behaviors through code-defined interfaces.

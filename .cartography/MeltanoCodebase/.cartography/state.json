@@ -1,0 +1,11 @@
+{
+  "head": "2598443f03aa05ba6d1cc532bbd350eeb1568fe9",
+  "analyzed_at_epoch": 1773273501.1234627,
+  "repository": {
+    "owner": "meltano",
+    "repo_name": "meltano",
+    "branch": "main",
+    "display_name": "meltano/meltano",
+    "url": "https://github.com/meltano/meltano.git"
+  }
+}

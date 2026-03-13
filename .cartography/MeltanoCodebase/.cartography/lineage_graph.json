@@ -1,0 +1,1522 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {
+    "hydrologist_insights": {
+      "source_count": 45,
+      "sink_count": 29,
+      "transformation_type_counts": {
+        "python_file_reader": 17,
+        "python_table_reader": 12
+      },
+      "top_pipeline_impacts": []
+    }
+  },
+  "nodes": [
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_table_reader",
+      "source_file": "tests/fixtures/db/mssql.py",
+      "line_range": [
+        28,
+        31
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::tests/fixtures/db/mssql.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/fixtures/db/mssql.py:28-28",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/fixtures/db/mssql.py:28-28"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/fixtures/db/mssql.py:31-31",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/fixtures/db/mssql.py:31-31"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_table_reader",
+      "source_file": "tests/fixtures/db/postgresql_psycopg2.py",
+      "line_range": [
+        16,
+        19
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::tests/fixtures/db/postgresql_psycopg2.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/fixtures/db/postgresql_psycopg2.py:16-16",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/fixtures/db/postgresql_psycopg2.py:16-16"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/fixtures/db/postgresql_psycopg2.py:19-19",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/fixtures/db/postgresql_psycopg2.py:19-19"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_table_reader",
+      "source_file": "tests/fixtures/db/postgresql.py",
+      "line_range": [
+        16,
+        19
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::tests/fixtures/db/postgresql.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/fixtures/db/postgresql.py:16-16",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/fixtures/db/postgresql.py:16-16"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/fixtures/db/postgresql.py:19-19",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/fixtures/db/postgresql.py:19-19"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_table_reader",
+      "source_file": "tests/meltano/core/test_sqlalchemy.py",
+      "line_range": [
+        19,
+        62
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::tests/meltano/core/test_sqlalchemy.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "test",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": false,
+      "id": "dataset::test"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/meltano/core/test_sqlalchemy.py:60-60",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/meltano/core/test_sqlalchemy.py:60-60"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/meltano/core/test_sqlalchemy.py:62-62",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/meltano/core/test_sqlalchemy.py:62-62"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "tests/meltano/core/behavior/test_canonical.py",
+      "line_range": [
+        35,
+        164
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::tests/meltano/core/behavior/test_canonical.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/meltano/core/behavior/test_canonical.py:35-35",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/meltano/core/behavior/test_canonical.py:35-35"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/meltano/core/behavior/test_canonical.py:164-164",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/meltano/core/behavior/test_canonical.py:164-164"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "tests/meltano/core/logging/test_output_logger.py",
+      "line_range": [
+        301,
+        301
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::tests/meltano/core/logging/test_output_logger.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/meltano/core/logging/test_output_logger.py:301-301",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/meltano/core/logging/test_output_logger.py:301-301"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "tests/meltano/core/state_store/test_state_store.py",
+      "line_range": [
+        526,
+        526
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::tests/meltano/core/state_store/test_state_store.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/meltano/core/state_store/test_state_store.py:526-526",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/meltano/core/state_store/test_state_store.py:526-526"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "tests/meltano/core/plugin/test_airflow.py",
+      "line_range": [
+        63,
+        63
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::tests/meltano/core/plugin/test_airflow.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/meltano/core/plugin/test_airflow.py:63-63",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/meltano/core/plugin/test_airflow.py:63-63"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "tests/meltano/core/plugin/singer/test_mapper.py",
+      "line_range": [
+        94,
+        94
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::tests/meltano/core/plugin/singer/test_mapper.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/meltano/core/plugin/singer/test_mapper.py:94-94",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/meltano/core/plugin/singer/test_mapper.py:94-94"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "tests/meltano/core/plugin/singer/test_tap.py",
+      "line_range": [
+        788,
+        1262
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::tests/meltano/core/plugin/singer/test_tap.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/meltano/core/plugin/singer/test_tap.py:788-788",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/meltano/core/plugin/singer/test_tap.py:788-788"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/meltano/core/plugin/singer/test_tap.py:972-972",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/meltano/core/plugin/singer/test_tap.py:972-972"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ tests/meltano/core/plugin/singer/test_tap.py:1262-1262",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::tests/meltano/core/plugin/singer/test_tap.py:1262-1262"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "src/meltano/cli/config.py",
+      "line_range": [
+        604,
+        604
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/cli/config.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/cli/config.py:604-604",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/cli/config.py:604-604"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "src/meltano/cli/state.py",
+      "line_range": [
+        245,
+        293
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/cli/state.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/cli/state.py:245-245",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/cli/state.py:245-245"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/cli/state.py:293-293",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/cli/state.py:293-293"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "src/meltano/core/error.py",
+      "line_range": [
+        90,
+        90
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/core/error.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/error.py:90-90",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/error.py:90-90"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_table_reader",
+      "source_file": "src/meltano/core/db.py",
+      "line_range": [
+        213,
+        216
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/core/db.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/db.py:213-213",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/db.py:213-213"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/db.py:215-215",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/db.py:215-215"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/db.py:216-216",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/db.py:216-216"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "src/meltano/core/venv_service.py",
+      "line_range": [
+        469,
+        606
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/core/venv_service.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/venv_service.py:469-469",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/venv_service.py:469-469"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/venv_service.py:606-606",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/venv_service.py:606-606"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "src/meltano/core/yaml.py",
+      "line_range": [
+        72,
+        72
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/core/yaml.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/yaml.py:72-72",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/yaml.py:72-72"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_table_reader",
+      "source_file": "src/meltano/migrations/versions/53e97221d99f_add_run_id_to_job.py",
+      "line_range": [
+        33,
+        33
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/migrations/versions/53e97221d99f_add_run_id_to_job.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "job",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": false,
+      "id": "dataset::job"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_table_reader",
+      "source_file": "src/meltano/migrations/versions/990c0665f3ce_ensure_user_login_count_default_value.py",
+      "line_range": [
+        27,
+        29
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/migrations/versions/990c0665f3ce_ensure_user_login_count_default_value.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/migrations/versions/990c0665f3ce_ensure_user_login_count_default_value.py:27-29",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/migrations/versions/990c0665f3ce_ensure_user_login_count_default_value.py:27-29"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_table_reader",
+      "source_file": "src/meltano/migrations/versions/23ea52e6d784_add_resource_type_to_embed_token.py",
+      "line_range": [
+        39,
+        40
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/migrations/versions/23ea52e6d784_add_resource_type_to_embed_token.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "embed_tokens",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": false,
+      "id": "dataset::embed_tokens"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/migrations/versions/23ea52e6d784_add_resource_type_to_embed_token.py:40-40",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/migrations/versions/23ea52e6d784_add_resource_type_to_embed_token.py:40-40"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_table_reader",
+      "source_file": "src/meltano/migrations/versions/6828cc5b1a4f_create_dedicated_state_table.py",
+      "line_range": [
+        363,
+        363
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/migrations/versions/6828cc5b1a4f_create_dedicated_state_table.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/migrations/versions/6828cc5b1a4f_create_dedicated_state_table.py:363-363",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/migrations/versions/6828cc5b1a4f_create_dedicated_state_table.py:363-363"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "src/meltano/core/logging/utils.py",
+      "line_range": [
+        83,
+        83
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/core/logging/utils.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/logging/utils.py:83-83",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/logging/utils.py:83-83"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "src/meltano/core/logging/job_logging_service.py",
+      "line_range": [
+        116,
+        319
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/core/logging/job_logging_service.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/logging/job_logging_service.py:116-116",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/logging/job_logging_service.py:116-116"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/logging/job_logging_service.py:204-204",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/logging/job_logging_service.py:204-204"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/logging/job_logging_service.py:319-319",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/logging/job_logging_service.py:319-319"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "src/meltano/core/state_store/base.py",
+      "line_range": [
+        73,
+        73
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/core/state_store/base.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/state_store/base.py:73-73",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/state_store/base.py:73-73"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_table_reader",
+      "source_file": "src/meltano/core/state_store/db.py",
+      "line_range": [
+        124,
+        124
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/core/state_store/db.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/state_store/db.py:124-124",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/state_store/db.py:124-124"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "src/meltano/core/state_store/filesystem.py",
+      "line_range": [
+        238,
+        238
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/core/state_store/filesystem.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/state_store/filesystem.py:238-238",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/state_store/filesystem.py:238-238"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_table_reader",
+      "source_file": "src/meltano/core/block/extract_load.py",
+      "line_range": [
+        511,
+        543
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/core/block/extract_load.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/block/extract_load.py:511-511",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/block/extract_load.py:511-511"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/block/extract_load.py:543-543",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/block/extract_load.py:543-543"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "src/meltano/core/utils/pidfile.py",
+      "line_range": [
+        23,
+        23
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/core/utils/pidfile.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/utils/pidfile.py:23-23",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/utils/pidfile.py:23-23"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_table_reader",
+      "source_file": "src/meltano/core/plugin/singer/catalog.py",
+      "line_range": [
+        478,
+        478
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/core/plugin/singer/catalog.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/plugin/singer/catalog.py:478-478",
+      "storage_type": "table",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/plugin/singer/catalog.py:478-478"
+    },
+    {
+      "node_type": "transformation",
+      "source_datasets": [],
+      "target_datasets": [],
+      "transformation_type": "python_file_reader",
+      "source_file": "src/meltano/core/plugin/singer/tap.py",
+      "line_range": [
+        498,
+        498
+      ],
+      "sql_query_if_applicable": "",
+      "id": "transform::src/meltano/core/plugin/singer/tap.py"
+    },
+    {
+      "node_type": "dataset",
+      "name": "dynamic reference, cannot resolve @ src/meltano/core/plugin/singer/tap.py:498-498",
+      "storage_type": "file",
+      "schema_snapshot": {},
+      "freshness_sla": "",
+      "owner": "",
+      "is_source_of_truth": false,
+      "unresolved_dynamic_reference": true,
+      "id": "dataset::dynamic reference, cannot resolve::src/meltano/core/plugin/singer/tap.py:498-498"
+    }
+  ],
+  "edges": [
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/fixtures/db/mssql.py",
+      "line_range": [
+        28,
+        28
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/fixtures/db/mssql.py:28-28",
+      "target": "transform::tests/fixtures/db/mssql.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/fixtures/db/mssql.py",
+      "line_range": [
+        31,
+        31
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/fixtures/db/mssql.py:31-31",
+      "target": "transform::tests/fixtures/db/mssql.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/fixtures/db/postgresql_psycopg2.py",
+      "line_range": [
+        16,
+        16
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/fixtures/db/postgresql_psycopg2.py:16-16",
+      "target": "transform::tests/fixtures/db/postgresql_psycopg2.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/fixtures/db/postgresql_psycopg2.py",
+      "line_range": [
+        19,
+        19
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/fixtures/db/postgresql_psycopg2.py:19-19",
+      "target": "transform::tests/fixtures/db/postgresql_psycopg2.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/fixtures/db/postgresql.py",
+      "line_range": [
+        16,
+        16
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/fixtures/db/postgresql.py:16-16",
+      "target": "transform::tests/fixtures/db/postgresql.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/fixtures/db/postgresql.py",
+      "line_range": [
+        19,
+        19
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/fixtures/db/postgresql.py:19-19",
+      "target": "transform::tests/fixtures/db/postgresql.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/meltano/core/test_sqlalchemy.py",
+      "line_range": [
+        19,
+        24
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": false,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::test",
+      "target": "transform::tests/meltano/core/test_sqlalchemy.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/meltano/core/test_sqlalchemy.py",
+      "line_range": [
+        60,
+        60
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/meltano/core/test_sqlalchemy.py:60-60",
+      "target": "transform::tests/meltano/core/test_sqlalchemy.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/meltano/core/test_sqlalchemy.py",
+      "line_range": [
+        62,
+        62
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/meltano/core/test_sqlalchemy.py:62-62",
+      "target": "transform::tests/meltano/core/test_sqlalchemy.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/meltano/core/behavior/test_canonical.py",
+      "line_range": [
+        35,
+        35
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/meltano/core/behavior/test_canonical.py:35-35",
+      "target": "transform::tests/meltano/core/behavior/test_canonical.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/meltano/core/behavior/test_canonical.py",
+      "line_range": [
+        164,
+        164
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/meltano/core/behavior/test_canonical.py:164-164",
+      "target": "transform::tests/meltano/core/behavior/test_canonical.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/meltano/core/logging/test_output_logger.py",
+      "line_range": [
+        301,
+        301
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/meltano/core/logging/test_output_logger.py:301-301",
+      "target": "transform::tests/meltano/core/logging/test_output_logger.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/meltano/core/state_store/test_state_store.py",
+      "line_range": [
+        526,
+        526
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/meltano/core/state_store/test_state_store.py:526-526",
+      "target": "transform::tests/meltano/core/state_store/test_state_store.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/meltano/core/plugin/test_airflow.py",
+      "line_range": [
+        63,
+        63
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/meltano/core/plugin/test_airflow.py:63-63",
+      "target": "transform::tests/meltano/core/plugin/test_airflow.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/meltano/core/plugin/singer/test_mapper.py",
+      "line_range": [
+        94,
+        94
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/meltano/core/plugin/singer/test_mapper.py:94-94",
+      "target": "transform::tests/meltano/core/plugin/singer/test_mapper.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/meltano/core/plugin/singer/test_tap.py",
+      "line_range": [
+        788,
+        788
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/meltano/core/plugin/singer/test_tap.py:788-788",
+      "target": "transform::tests/meltano/core/plugin/singer/test_tap.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/meltano/core/plugin/singer/test_tap.py",
+      "line_range": [
+        972,
+        972
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/meltano/core/plugin/singer/test_tap.py:972-972",
+      "target": "transform::tests/meltano/core/plugin/singer/test_tap.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "tests/meltano/core/plugin/singer/test_tap.py",
+      "line_range": [
+        1262,
+        1262
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::tests/meltano/core/plugin/singer/test_tap.py:1262-1262",
+      "target": "transform::tests/meltano/core/plugin/singer/test_tap.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/cli/config.py",
+      "line_range": [
+        604,
+        604
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/cli/config.py:604-604",
+      "target": "transform::src/meltano/cli/config.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/cli/state.py",
+      "line_range": [
+        245,
+        245
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/cli/state.py:245-245",
+      "target": "transform::src/meltano/cli/state.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/cli/state.py",
+      "line_range": [
+        293,
+        293
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/cli/state.py:293-293",
+      "target": "transform::src/meltano/cli/state.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/error.py",
+      "line_range": [
+        90,
+        90
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/error.py:90-90",
+      "target": "transform::src/meltano/core/error.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/db.py",
+      "line_range": [
+        213,
+        213
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/db.py:213-213",
+      "target": "transform::src/meltano/core/db.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/db.py",
+      "line_range": [
+        215,
+        215
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/db.py:215-215",
+      "target": "transform::src/meltano/core/db.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/db.py",
+      "line_range": [
+        216,
+        216
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/db.py:216-216",
+      "target": "transform::src/meltano/core/db.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/venv_service.py",
+      "line_range": [
+        469,
+        469
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/venv_service.py:469-469",
+      "target": "transform::src/meltano/core/venv_service.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/venv_service.py",
+      "line_range": [
+        606,
+        606
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/venv_service.py:606-606",
+      "target": "transform::src/meltano/core/venv_service.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/yaml.py",
+      "line_range": [
+        72,
+        72
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/yaml.py:72-72",
+      "target": "transform::src/meltano/core/yaml.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/migrations/versions/53e97221d99f_add_run_id_to_job.py",
+      "line_range": [
+        33,
+        33
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": false,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::job",
+      "target": "transform::src/meltano/migrations/versions/53e97221d99f_add_run_id_to_job.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/migrations/versions/990c0665f3ce_ensure_user_login_count_default_value.py",
+      "line_range": [
+        27,
+        29
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/migrations/versions/990c0665f3ce_ensure_user_login_count_default_value.py:27-29",
+      "target": "transform::src/meltano/migrations/versions/990c0665f3ce_ensure_user_login_count_default_value.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/migrations/versions/23ea52e6d784_add_resource_type_to_embed_token.py",
+      "line_range": [
+        39,
+        39
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": false,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::embed_tokens",
+      "target": "transform::src/meltano/migrations/versions/23ea52e6d784_add_resource_type_to_embed_token.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/migrations/versions/23ea52e6d784_add_resource_type_to_embed_token.py",
+      "line_range": [
+        40,
+        40
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/migrations/versions/23ea52e6d784_add_resource_type_to_embed_token.py:40-40",
+      "target": "transform::src/meltano/migrations/versions/23ea52e6d784_add_resource_type_to_embed_token.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/migrations/versions/6828cc5b1a4f_create_dedicated_state_table.py",
+      "line_range": [
+        363,
+        363
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/migrations/versions/6828cc5b1a4f_create_dedicated_state_table.py:363-363",
+      "target": "transform::src/meltano/migrations/versions/6828cc5b1a4f_create_dedicated_state_table.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/logging/utils.py",
+      "line_range": [
+        83,
+        83
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/logging/utils.py:83-83",
+      "target": "transform::src/meltano/core/logging/utils.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/logging/job_logging_service.py",
+      "line_range": [
+        116,
+        116
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/logging/job_logging_service.py:116-116",
+      "target": "transform::src/meltano/core/logging/job_logging_service.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/logging/job_logging_service.py",
+      "line_range": [
+        204,
+        204
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/logging/job_logging_service.py:204-204",
+      "target": "transform::src/meltano/core/logging/job_logging_service.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/logging/job_logging_service.py",
+      "line_range": [
+        319,
+        319
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/logging/job_logging_service.py:319-319",
+      "target": "transform::src/meltano/core/logging/job_logging_service.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/state_store/base.py",
+      "line_range": [
+        73,
+        73
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/state_store/base.py:73-73",
+      "target": "transform::src/meltano/core/state_store/base.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/state_store/db.py",
+      "line_range": [
+        124,
+        124
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/state_store/db.py:124-124",
+      "target": "transform::src/meltano/core/state_store/db.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/state_store/filesystem.py",
+      "line_range": [
+        238,
+        238
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/state_store/filesystem.py:238-238",
+      "target": "transform::src/meltano/core/state_store/filesystem.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/block/extract_load.py",
+      "line_range": [
+        511,
+        511
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/block/extract_load.py:511-511",
+      "target": "transform::src/meltano/core/block/extract_load.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/block/extract_load.py",
+      "line_range": [
+        543,
+        543
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/block/extract_load.py:543-543",
+      "target": "transform::src/meltano/core/block/extract_load.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/utils/pidfile.py",
+      "line_range": [
+        23,
+        23
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/utils/pidfile.py:23-23",
+      "target": "transform::src/meltano/core/utils/pidfile.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/plugin/singer/catalog.py",
+      "line_range": [
+        478,
+        478
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_table_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/plugin/singer/catalog.py:478-478",
+      "target": "transform::src/meltano/core/plugin/singer/catalog.py"
+    },
+    {
+      "edge_type": "CONSUMES",
+      "weight": 1.0,
+      "source_file": "src/meltano/core/plugin/singer/tap.py",
+      "line_range": [
+        498,
+        498
+      ],
+      "analysis_method": "tree_sitter_python",
+      "unresolved_dynamic_reference": true,
+      "transformation_type": "python_file_reader",
+      "source": "dataset::dynamic reference, cannot resolve::src/meltano/core/plugin/singer/tap.py:498-498",
+      "target": "transform::src/meltano/core/plugin/singer/tap.py"
+    }
+  ],
+  "graph_schema_version": 1
+}
