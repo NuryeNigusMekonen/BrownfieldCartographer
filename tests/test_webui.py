@@ -42,11 +42,39 @@ def test_workspace_docs_and_query_payloads(analyzed_mini_repo: Path) -> None:
     assert semanticist["modules"]
     assert "codebase" in archivist
     assert archivist["onboarding"]["questions"]
+    assert len(archivist["onboarding"]["questions"]) == 5
+    assert all(str(question.get("answer", "")).strip() for question in archivist["onboarding"]["questions"])
+    assert all(
+        str(question.get("confidence", "")) in {"low", "medium", "high"}
+        for question in archivist["onboarding"]["questions"]
+    )
+    assert all("confidence_score" in question for question in archivist["onboarding"]["questions"])
+    assert all("confidence_label" in question for question in archivist["onboarding"]["questions"])
+    assert all("confidence_factors" in question for question in archivist["onboarding"]["questions"])
+    assert all("confidence_reason" in question for question in archivist["onboarding"]["questions"])
+    assert all("confidence_components" in question for question in archivist["onboarding"]["questions"])
+    assert all(
+        str(question.get("confidence_label", "")) in {"low", "medium", "high"}
+        for question in archivist["onboarding"]["questions"]
+    )
+    assert all(
+        isinstance(question.get("confidence_factors", {}), dict)
+        for question in archivist["onboarding"]["questions"]
+    )
+    assert all(
+        isinstance(question.get("confidence_reason", ""), str)
+        for question in archivist["onboarding"]["questions"]
+    )
+    assert all(
+        isinstance(question.get("confidence_components", {}), dict)
+        for question in archivist["onboarding"]["questions"]
+    )
     assert "results" in semantic
     assert query["ok"] is True
     assert query["tool"] == "explain_module"
     assert query["arg"] == "pipeline.py"
     assert query["result"]["module"] == "pipeline.py"
+    assert query["evidence"][0]["source_file"] == "pipeline.py"
 
 
 def test_resolve_cartography_dir_requires_existing_output(tmp_path: Path) -> None:

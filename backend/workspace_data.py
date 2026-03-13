@@ -9,18 +9,17 @@ from urllib.parse import parse_qs
 
 import networkx as nx
 
-from src.agents.hydrologist import HydrologistAgent
-from src.agents.navigator import NavigatorAgent
+from src.agents.navigator import NavigatorLangGraphAgent
 from src.graph.knowledge_graph import KnowledgeGraph
 from src.repo import repository_metadata
 
 
 DAY_ONE_TITLES = {
     "1": "Primary Data Ingestion Path",
-    "2": "Critical Output Datasets",
-    "3": "Blast Radius of Critical Modules",
-    "4": "Location of Business Logic",
-    "5": "Recent High Velocity Areas",
+    "2": "Critical Output Datasets/Endpoints",
+    "3": "Blast Radius of Critical Module Failure",
+    "4": "Business Logic Concentration",
+    "5": "Onboarding-Relevant High-Velocity Areas",
 }
 
 
@@ -29,8 +28,7 @@ class CartographyWorkspaceData:
         self.cartography_dir = cartography_dir
         self.module_graph = KnowledgeGraph.load(cartography_dir / "module_graph.json")
         self.lineage_graph = KnowledgeGraph.load(cartography_dir / "lineage_graph.json")
-        self.navigator = NavigatorAgent(self.module_graph, self.lineage_graph)
-        self.hydrologist = HydrologistAgent(self.lineage_graph)
+        self.navigator = NavigatorLangGraphAgent(self.module_graph, self.lineage_graph)
         self.semantic_index = self._load_semantic_index()
         self.trace = self._load_trace()
         self.state = self._load_state()
@@ -260,55 +258,18 @@ class CartographyWorkspaceData:
         return {"query": query, "results": results[:25]}
 
     def run_query(self, raw_query: str) -> dict[str, Any]:
-        tool, arg, direction = self._parse_query(raw_query)
-        if not tool:
-            return {
-                "ok": False,
-                "query": raw_query,
-                "tool": "",
-                "arg": "",
-                "direction": "upstream",
-                "result": None,
-                "error": (
-                    "Supported commands: explain_module <path>, find_implementation <concept>, "
-                    "trace_lineage <dataset>, what_feeds_table <dataset>, "
-                    "what_depends_on_output <dataset>, blast_radius <dataset>."
-                ),
-            }
-
-        if tool == "find_implementation":
-            result = self.navigator.find_implementation(arg)
-        elif tool == "trace_lineage":
-            result = self.hydrologist.get_downstream(arg) if direction == "downstream" else self.hydrologist.get_upstream(arg)
-        elif tool == "upstream":
-            result = self.hydrologist.get_upstream(arg)
-        elif tool == "downstream":
-            result = self.hydrologist.get_downstream(arg)
-        elif tool == "what_feeds_table":
-            result = self.hydrologist.what_feeds_table(arg)
-        elif tool == "what_depends_on_output":
-            result = self.hydrologist.what_depends_on_output(arg)
-        elif tool == "blast_radius":
-            result = self.hydrologist.blast_radius(arg)
-            if isinstance(result, dict) and int(result.get("impact_count", 0)) == 0 and arg in self.module_graph.graph:
-                module_impacted = self.navigator.blast_radius(arg)
-                result = {
-                    "target": arg,
-                    "impacted_nodes": module_impacted,
-                    "impact_count": len(module_impacted),
-                    "evidence": [entry.get("evidence", {}) for entry in module_impacted],
-                }
-        else:
-            result = self.navigator.explain_module(arg)
-        error = result.get("error") if isinstance(result, dict) else None
+        state = self.navigator.query(raw_query)
+        result = state.get("result")
+        error = state.get("error")
         return {
             "ok": error is None,
             "query": raw_query,
-            "tool": tool,
-            "arg": arg,
-            "direction": direction,
+            "tool": str(state.get("tool", "")),
+            "arg": str(state.get("arg", "")),
+            "direction": str(state.get("direction", "upstream")),
             "result": result,
             "error": error,
+            "evidence": state.get("evidence", []),
         }
 
     def node_details(self, graph_name: str, node_id: str) -> dict[str, Any]:
@@ -422,15 +383,73 @@ class CartographyWorkspaceData:
         questions: list[dict[str, Any]] = []
         for part in parts:
             part = part.strip()
-            if not part or part.startswith("FDE Day-One Brief"):
+            if not part:
                 continue
             lines = part.splitlines()
+            if not lines:
+                continue
             heading = lines[0].strip()
+            normalized_heading = re.sub(r"^#+\s*", "", heading).strip().lower()
+            if normalized_heading == "fde day-one brief":
+                continue
             body = "\n".join(lines[1:]).strip()
             answer, evidence = body, []
             if "Evidence:" in body:
                 answer, evidence_block = body.split("Evidence:", 1)
                 evidence = self._parse_evidence_block(evidence_block)
+            confidence = "medium"
+            confidence_label = "medium"
+            confidence_score: float | None = None
+            confidence_factors: dict[str, float] = {}
+            confidence_reason = ""
+            confidence_components: dict[str, float] = {}
+            cleaned_answer_lines: list[str] = []
+            for line in answer.splitlines():
+                stripped = line.strip()
+                match = re.match(
+                    r"^confidence(?:\s+level)?\s*:\s*(low|medium|high)(?:\s*\(score:\s*([0-9]*\.?[0-9]+)\s*\))?\s*$",
+                    stripped,
+                    flags=re.IGNORECASE,
+                )
+                if match:
+                    confidence = match.group(1).lower()
+                    confidence_label = confidence
+                    if match.group(2):
+                        try:
+                            confidence_score = float(match.group(2))
+                        except ValueError:
+                            confidence_score = None
+                    continue
+                label_match = re.match(r"^confidence\s+label\s*:\s*(low|medium|high)\s*$", stripped, flags=re.IGNORECASE)
+                if label_match:
+                    confidence_label = label_match.group(1).lower()
+                    confidence = confidence_label
+                    continue
+                score_match = re.match(r"^confidence\s+score\s*:\s*([0-9]*\.?[0-9]+)\s*$", stripped, flags=re.IGNORECASE)
+                if score_match:
+                    try:
+                        confidence_score = float(score_match.group(1))
+                    except ValueError:
+                        confidence_score = None
+                    continue
+                factors_match = re.match(r"^confidence\s+factors\s*:\s*(.+)$", stripped, flags=re.IGNORECASE)
+                if factors_match:
+                    confidence_factors = self._parse_confidence_factors(factors_match.group(1))
+                    confidence_components = self._factors_to_legacy_components(confidence_factors)
+                    continue
+                reason_match = re.match(r"^confidence\s+reason\s*:\s*(.+)$", stripped, flags=re.IGNORECASE)
+                if reason_match:
+                    confidence_reason = reason_match.group(1).strip()
+                    continue
+                components_match = re.match(r"^confidence\s+details\s*:\s*(.+)$", stripped, flags=re.IGNORECASE)
+                if components_match:
+                    confidence_components = self._parse_confidence_components(components_match.group(1))
+                    confidence_factors = self._legacy_components_to_factors(confidence_components)
+                    continue
+                cleaned_answer_lines.append(line)
+            answer = "\n".join(cleaned_answer_lines).strip()
+            if not answer and not evidence:
+                continue
             qid_match = re.match(r"(\d+)\)\s+(.*)", heading)
             qid = qid_match.group(1) if qid_match else str(len(questions) + 1)
             title = DAY_ONE_TITLES.get(qid, qid_match.group(2).strip() if qid_match else heading)
@@ -439,6 +458,12 @@ class CartographyWorkspaceData:
                     "id": qid,
                     "title": title,
                     "answer": answer.strip(),
+                    "confidence": confidence,
+                    "confidence_label": confidence_label,
+                    "confidence_score": confidence_score,
+                    "confidence_factors": confidence_factors,
+                    "confidence_reason": confidence_reason,
+                    "confidence_components": confidence_components,
                     "evidence": evidence,
                 }
             )
@@ -461,6 +486,72 @@ class CartographyWorkspaceData:
                 continue
         return evidence
 
+    def _parse_confidence_components(self, text: str) -> dict[str, float]:
+        components: dict[str, float] = {}
+        for chunk in text.split(","):
+            part = chunk.strip()
+            if "=" not in part:
+                continue
+            key, value = part.split("=", 1)
+            normalized = key.strip().lower()
+            if normalized not in {
+                "evidence_count_score",
+                "evidence_diversity_score",
+                "graph_coverage_score",
+                "heuristic_reliability_score",
+                "signal_agreement_score",
+                "repo_type_fit_score",
+            }:
+                continue
+            try:
+                components[normalized] = float(value.strip())
+            except ValueError:
+                continue
+        return components
+
+    def _parse_confidence_factors(self, text: str) -> dict[str, float]:
+        factors: dict[str, float] = {}
+        for chunk in text.split(","):
+            part = chunk.strip()
+            if "=" not in part:
+                continue
+            key, value = part.split("=", 1)
+            normalized = key.strip().lower()
+            if normalized not in {
+                "evidence_count",
+                "evidence_diversity",
+                "graph_coverage",
+                "heuristic_reliability",
+                "signal_agreement",
+                "repo_type_fit",
+            }:
+                continue
+            try:
+                factors[normalized] = float(value.strip())
+            except ValueError:
+                continue
+        return factors
+
+    def _factors_to_legacy_components(self, factors: dict[str, float]) -> dict[str, float]:
+        return {
+            "evidence_count_score": float(factors.get("evidence_count", 0.0)),
+            "evidence_diversity_score": float(factors.get("evidence_diversity", 0.0)),
+            "graph_coverage_score": float(factors.get("graph_coverage", 0.0)),
+            "heuristic_reliability_score": float(factors.get("heuristic_reliability", 0.0)),
+            "signal_agreement_score": float(factors.get("signal_agreement", 0.0)),
+            "repo_type_fit_score": float(factors.get("repo_type_fit", 0.0)),
+        }
+
+    def _legacy_components_to_factors(self, components: dict[str, float]) -> dict[str, float]:
+        return {
+            "evidence_count": float(components.get("evidence_count_score", 0.0)),
+            "evidence_diversity": float(components.get("evidence_diversity_score", 0.0)),
+            "graph_coverage": float(components.get("graph_coverage_score", 0.0)),
+            "heuristic_reliability": float(components.get("heuristic_reliability_score", 0.0)),
+            "signal_agreement": float(components.get("signal_agreement_score", 0.0)),
+            "repo_type_fit": float(components.get("repo_type_fit_score", 0.0)),
+        }
+
     def _parse_query(self, raw_query: str) -> tuple[str, str, str]:
         text = raw_query.strip()
         lowered = text.lower()
@@ -468,14 +559,15 @@ class CartographyWorkspaceData:
             return "", "", "upstream"
 
         direct_match = re.match(
-            r"^(explain_module|blast_radius|find_implementation|trace_lineage|what_feeds_table|what_depends_on_output|upstream|downstream|feeds|depends_on)\s+(.+)$",
+            r"^(explain_module|blast_radius|find_implementation|trace_lineage|upstream|downstream|feeds|depends_on)\s+(.+)$",
             text,
             flags=re.IGNORECASE,
         )
         if direct_match:
-            tool = self._normalize_query_tool(direct_match.group(1).lower())
+            raw_tool = direct_match.group(1).lower()
+            tool = self._normalize_query_tool(raw_tool)
             arg = direct_match.group(2).strip()
-            return tool, arg, "upstream"
+            return tool, arg, self._normalize_query_direction(raw_tool, "upstream")
 
         if lowered.startswith("find implementation "):
             return "find_implementation", text[20:].strip(), "upstream"
@@ -490,17 +582,17 @@ class CartographyWorkspaceData:
         if lowered.startswith("trace downstream of "):
             return "trace_lineage", text[20:].strip(), "downstream"
         if lowered.startswith("upstream "):
-            return "upstream", text[9:].strip(), "upstream"
+            return "trace_lineage", text[9:].strip(), "upstream"
         if lowered.startswith("downstream "):
-            return "downstream", text[11:].strip(), "downstream"
+            return "trace_lineage", text[11:].strip(), "downstream"
         if lowered.startswith("what feeds table "):
-            return "what_feeds_table", text[17:].strip(), "upstream"
+            return "trace_lineage", text[17:].strip(), "upstream"
         if lowered.startswith("what depends on output "):
-            return "what_depends_on_output", text[23:].strip(), "downstream"
+            return "trace_lineage", text[23:].strip(), "downstream"
         if lowered.startswith("feeds "):
-            return "what_feeds_table", text[6:].strip(), "upstream"
+            return "trace_lineage", text[6:].strip(), "upstream"
         if lowered.startswith("depends_on "):
-            return "what_depends_on_output", text[11:].strip(), "downstream"
+            return "trace_lineage", text[11:].strip(), "downstream"
         if lowered.startswith("blast radius "):
             return "blast_radius", text[13:].strip(), "upstream"
         if lowered.startswith("compute blast radius of "):
@@ -511,18 +603,31 @@ class CartographyWorkspaceData:
             return "explain_module", text[8:].strip(), "upstream"
 
         query = parse_qs(text)
-        tool = self._normalize_query_tool(query.get("tool", [""])[0])
+        raw_tool = query.get("tool", [""])[0]
+        tool = self._normalize_query_tool(raw_tool)
         arg = query.get("arg", [""])[0]
-        direction = query.get("direction", ["upstream"])[0]
+        direction = self._normalize_query_direction(raw_tool, query.get("direction", ["upstream"])[0])
         return tool, arg, direction
 
     def _normalize_query_tool(self, tool: str) -> str:
         normalized = tool.strip().lower()
         aliases = {
-            "feeds": "what_feeds_table",
-            "depends_on": "what_depends_on_output",
+            "feeds": "trace_lineage",
+            "depends_on": "trace_lineage",
+            "upstream": "trace_lineage",
+            "downstream": "trace_lineage",
+            "what_feeds_table": "trace_lineage",
+            "what_depends_on_output": "trace_lineage",
         }
         return aliases.get(normalized, normalized)
+
+    def _normalize_query_direction(self, tool: str, direction: str) -> str:
+        normalized_tool = tool.strip().lower()
+        if normalized_tool in {"downstream", "depends_on", "what_depends_on_output"}:
+            return "downstream"
+        if normalized_tool in {"upstream", "feeds", "what_feeds_table"}:
+            return "upstream"
+        return "downstream" if direction.strip().lower() == "downstream" else "upstream"
 
     def _documentation_drift_flags(self) -> list[dict[str, Any]]:
         flags = []
