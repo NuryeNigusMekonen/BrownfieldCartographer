@@ -63,6 +63,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "gitpython" },
     { name = "jedi" },
+    { name = "langgraph" },
     { name = "nbformat" },
     { name = "networkx" },
     { name = "ollama" },
@@ -86,9 +87,6 @@ dependencies = [
 dev = [
     { name = "pytest" },
 ]
-llm = [
-    { name = "langgraph" },
-]
 parsers = [
     { name = "tree-sitter-languages" },
 ]
@@ -98,7 +96,7 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115.0" },
     { name = "gitpython", specifier = ">=3.1.43" },
     { name = "jedi", specifier = ">=0.19.1" },
-    { name = "langgraph", marker = "extra == 'llm'", specifier = ">=0.2.0" },
+    { name = "langgraph", specifier = ">=0.2.0" },
     { name = "nbformat", specifier = ">=5.10.4" },
     { name = "networkx", specifier = ">=3.3" },
     { name = "ollama", specifier = ">=0.3.2" },
@@ -119,7 +117,7 @@ requires-dist = [
     { name = "typer", specifier = ">=0.12.5" },
     { name = "uvicorn", specifier = ">=0.30.6" },
 ]
-provides-extras = ["llm", "parsers", "dev"]
+provides-extras = ["parsers", "dev"]
 
 [[package]]
 name = "certifi"
